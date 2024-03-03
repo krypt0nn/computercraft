@@ -1,3 +1,18 @@
+-- stringify({ a = "b" }) = "{a:b;}"
+local function stringify(value)
+    if type(value) == "table" then
+        local string = ""
+
+        for key, value in pairs(value) do
+            string = string .. stringify(key) .. ":" .. stringify(value) .. ";"
+        end
+
+        return "{" .. string .. "}"
+    else
+        return tostring(value)
+    end
+end
+
 -- hex({ 0, 0, 0, 0 }) = 00000000
 local function hex(bytes)
     local alphabet = {
@@ -24,15 +39,21 @@ local function hash(...)
     local n = #bytes
 
     for _, value in pairs({ ... }) do
-        value = tostring(value)
+        value = stringify(value)
 
         for i = 1, #value do
             local byte = string.byte(value, i)
 
-            local left  = math.floor(256 - bytes[i % n + 1] / 2)
-            local right = (byte - bytes[i % n + 1]) % 256
+            local cos = math.floor((bytes[i % n + 1] - 128) / 256 * 10000) / 10000
+            local sin = math.floor((byte - 128) / 256 * 10000) / 10000
 
-            bytes[i % n + 1] = math.abs(bytes[i % n + 1] + left * right) % 256
+            local acos = math.floor(math.acos(cos) * 10000) / 10000
+            local asin = math.floor(math.asin(sin) * 10000) / 10000
+
+            local acos_deg = math.floor(math.deg(acos) * 10000) / 10000
+            local asin_deg = math.floor(math.deg(asin) * 10000) / 10000
+
+            bytes[i % n + 1] = (bytes[i % n + 1] + math.floor(acos_deg * asin_deg)) % 256
         end
     end
 
