@@ -29,10 +29,10 @@ local function hash(...)
         for i = 1, #value do
             local byte = string.byte(value, i)
 
-            local left  = math.floor(~bytes[i % n + 1] / 2)
-            local right = byte
+            local left  = math.floor(256 - bytes[i % n + 1] / 2)
+            local right = (byte - bytes[i % n + 1]) % 256
 
-            bytes[i % n + 1] = (bytes[i % n + 1] + left * right) % 256
+            bytes[i % n + 1] = math.abs(bytes[i % n + 1] + left * right) % 256
         end
     end
 
