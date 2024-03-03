@@ -2,6 +2,7 @@
     "conventionalCommits.scopes": [
         "excavate",
         "lib/fuel",
-        "lib/excavation"
+        "lib/excavation",
+        "require"
     ]
 }
