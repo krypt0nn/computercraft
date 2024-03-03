@@ -40,7 +40,7 @@ local function hash(...)
 end
 
 -- require({
---     source = "https://raw.githubusercontent.com/krypt0nn/computercraft/main/lib",
+--     source = "https://raw.githubusercontent.com/krypt0nn/computercraft/main/libs",
 --     cache = "cache",
 --     packages = {
 --         excavation = {

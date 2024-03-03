@@ -13,7 +13,7 @@ local packages = dofile("require.lua")({
 
 local function info()
     return {
-        version = 3
+        version = 4
     }
 end
 
@@ -38,10 +38,16 @@ local function digRectangle(length, width, height)
     local totalBlocks = length * width * height
     local minedBlocks = 0
 
-    local neededFuel = packages.fuel.refuel(movementsPerLine)
+    while true do
+        local neededFuel = packages.fuel.refuel(movementsPerLine)
 
-    if neededFuel > 0 then
-        notify("Need " .. neededFuel .. " more fuel!")
+        if neededFuel > 0 then
+            notify("Need " .. neededFuel .. " more fuel!")
+
+            sleep(15)
+        else
+            break
+        end
     end
 
     while width > 0 do
@@ -98,10 +104,16 @@ local function digRectangle(length, width, height)
             turtle.forward()
             turtle.turnLeft()
 
-            local neededFuel = packages.fuel.refuel(movementsPerLine)
+            while true do
+                local neededFuel = packages.fuel.refuel(movementsPerLine)
 
-            if neededFuel > 0 then
-                notify("Need " .. neededFuel .. " more fuel!")
+                if neededFuel > 0 then
+                    notify("Need " .. neededFuel .. " more fuel!")
+
+                    sleep(15)
+                else
+                    break
+                end
             end
         end
 
