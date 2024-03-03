@@ -1,25 +1,25 @@
 local function info()
     return {
-        version = 4
+        version = 5
     }
 end
 
--- Check if given entity name is a fuel
-local function isFuel(name)
+-- Get amount of movement automaton will get from given fuel,
+-- or nil if it's not a fuel
+local function getFuelValue(name)
     local fuel = {
-        "minecraft:coal",
-        "minecraft:coal_block",
-        "minecraft:charcoal",
-        "minecraft:dried_kelp_block"
+        ["minecraft:coal"]       = 80,
+        ["minecraft:charcoal"]   = 80,
+        ["minecraft:coal_block"] = 720
     }
 
-    for _, fuelName in pairs(fuel) do
+    for fuelName, fuelValue in pairs(fuel) do
         if name == fuelName then
-            return true
+            return fuelValue
         end
     end
 
-    return false
+    return nil
 end
 
 -- Refuel automaton
@@ -33,13 +33,19 @@ local function refuel(neededFuel)
         while slot < 17 do
             local detail = turtle.getItemDetail(slot)
 
-            if detail ~= nil and isFuel(detail.name) then
-                turtle.select(slot)
-                turtle.refuel()
+            if detail ~= nil then
+                local fuelValue = getFuelValue(detail.name)
 
-                hasFuel = true
+                if fuelValue then
+                    local refuelCount = math.ceil(neededFuel / fuelValue)
 
-                break
+                    turtle.select(slot)
+                    turtle.refuel(math.min(refuelCount, detail.count))
+
+                    hasFuel = true
+
+                    break
+                end
             end
 
             slot = slot + 1
@@ -54,7 +60,7 @@ local function refuel(neededFuel)
 end
 
 return {
-    info   = info,
-    isFuel = isFuel,
+    info = info,
+    getFuelValue = getFuelValue,
     refuel = refuel
 }
