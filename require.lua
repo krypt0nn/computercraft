@@ -9,7 +9,7 @@ local function hex(bytes)
 
     for _, byte in pairs(bytes) do
         local lower = byte % 16
-        local upper = byte // 16
+        local upper = math.floor(byte / 16)
 
         hex = hex .. alphabet[upper + 1] .. alphabet[lower + 1]
     end
