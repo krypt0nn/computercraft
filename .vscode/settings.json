@@ -1,6 +1,7 @@
 {
     "conventionalCommits.scopes": [
         "excavate",
-        "fuel"
+        "lib/fuel",
+        "lib/excavation"
     ]
 }

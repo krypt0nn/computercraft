@@ -6,7 +6,7 @@ local packages = dofile("require.lua")({
             minimalVersion = 4
         },
         fuel = {
-            minimalVersion = 3
+            minimalVersion = 5
         }
     }
 })
