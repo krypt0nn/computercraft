@@ -109,7 +109,7 @@ return function(params)
         end
 
         -- Load package from string
-        package = loadstring(package)
+        package = loadstring(package)()
 
         -- Verify requested package
         if not package.info then
