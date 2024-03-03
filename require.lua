@@ -9,7 +9,7 @@ local function hex(bytes)
 
     for _, byte in pairs(bytes) do
         local lower = byte % 16
-        local upper = math.floor(byte / 16)
+        local upper = math.floor(byte / 16) % 16
 
         hex = hex .. alphabet[upper + 1] .. alphabet[lower + 1]
     end
@@ -17,10 +17,11 @@ local function hex(bytes)
     return hex
 end
 
--- hash(value1, value2, value3, ...) = 6c1b23065b5d4108
+-- hash(value1, value2, value3, ...) = cfc62e561ec4c193
 local function hash(...)
     -- 3.1415926535897932384626433832795028...
     local bytes = { 31, 41, 59, 26, 53, 58, 97, 93 }
+    local n = #bytes
 
     for _, value in pairs({ ... }) do
         value = tostring(value)
@@ -28,7 +29,10 @@ local function hash(...)
         for i = 1, #value do
             local byte = string.byte(value, i)
 
-            bytes[i % 8 + 1] = (bytes[i % 8 + 1] ~ byte) % 256
+            local left  = math.floor(math.deg(math.acos((bytes[i % n + 1] - 128) / 256)))
+            local right = math.floor(math.deg(math.asin((byte - 128) / 256)))
+
+            bytes[i % n + 1] = (bytes[i % n + 1] + left * right) % 256
         end
     end
 
