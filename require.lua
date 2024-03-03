@@ -29,14 +29,14 @@ local function hash(...)
         for i = 1, #value do
             local byte = string.byte(value, i)
 
-            local cos = math.floor((bytes[i % n + 1] - 128) / 256 * 10000) / 10000
-            local sin = math.floor((byte - 128) / 256 * 10000) / 10000
+            local cos = math.floor((bytes[i % n + 1] - 128) / 256 * 100) / 100
+            local sin = math.floor((byte - 128) / 256 * 100) / 100
 
-            local acos = math.floor(math.acos(cos) * 10000) / 10000
-            local asin = math.floor(math.asin(sin) * 10000) / 10000
+            local acos = math.floor(math.acos(cos) * 100) / 100
+            local asin = math.floor(math.asin(sin) * 100) / 100
 
-            local acos_deg = math.floor(math.deg(acos) * 10000) / 10000
-            local asin_deg = math.floor(math.deg(asin) * 10000) / 10000
+            local acos_deg = math.floor(math.deg(acos) * 100) / 100
+            local asin_deg = math.floor(math.deg(asin) * 100) / 100
 
             bytes[i % n + 1] = (bytes[i % n + 1] + math.floor(acos_deg * asin_deg)) % 256
         end
