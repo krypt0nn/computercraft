@@ -39,13 +39,15 @@ local function start(params)
     if params.filter.save then
         local file = fs.open(params.filter.save, "r")
 
-        stored = file.readAll()
+        if file then
+            stored = file.readAll()
 
-        file.close()
+            file.close()
 
-        -- Set default value if failed to read
-        if not stored then
-            stored = 0
+            -- Set default value if failed to read
+            if not stored then
+                stored = 0
+            end
         end
     end
 
