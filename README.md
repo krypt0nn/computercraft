@@ -1,9 +1,15 @@
 # Setup
 
-Run this command in the computer:
+Run this command in the computer to download `require.lua` script:
 
 ```
 wget https://raw.githubusercontent.com/krypt0nn/computercraft/main/require.lua
+```
+
+Run this command to download the quickstart file:
+
+```
+wget https://raw.githubusercontent.com/krypt0nn/computercraft/main/quickstart.lua my_app.lua
 ```
 
 # Usage
