@@ -9,25 +9,26 @@ end
 --         name    = "kelp smart filter",
 --         slave   = "right",
 --         master  = "left",
---         save    = "storage.data",
---         timeout = 5
+--         save    = "storage.data"
 --     },
 --     input = {
---         side  = "top",
---         power = 15,
---         update = function()
+--         side    = "top",
+--         power   = 15,
+--         timeout = 3,
+--         update  = function()
 --             print("Input")
 --         end
 --     },
 --     output = {
---         side = "bottom",
---         power = 15,
---         update = function()
+--         side    = "bottom",
+--         power   = 15,
+--         timeout = 0.5,
+--         update  = function()
 --             print("Output")
 --         end
 --     },
 --     items = {
---         name = "kelp",
+--         name     = "kelp",
 --         quantity = 64
 --     }
 -- })
@@ -67,7 +68,7 @@ local function start(params)
 
             -- Wait until input is available
             while redstone.getAnalogInput(params.input.side) == (params.input.power or 15) do
-                sleep(params.filter.timeout or 5)
+                sleep(params.output.timeout or 0.5)
             end
 
             -- Disable output signal
@@ -93,7 +94,7 @@ local function start(params)
             end
         end
 
-        sleep(params.filter.timeout or 5)
+        sleep(params.input.timeout or 3)
     end
 end
 
