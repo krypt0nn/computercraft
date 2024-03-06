@@ -51,7 +51,7 @@ local function start(params)
 
     while true do
         -- If input signal detected
-        if redstone.getAnalogInput(params.input.side) == params.input.power or 15 then
+        if redstone.getAnalogInput(params.input.side) == (params.input.power or 15) then
             -- Call input update function if available
             if params.input.update then
                 params.input.update({
@@ -64,7 +64,7 @@ local function start(params)
             redstone.setAnalogOutput(params.output.side, params.output.power or 15)
 
             -- Wait until input is available
-            while redstone.getAnalogInput(params.input.side) == params.input.power or 15 then
+            while redstone.getAnalogInput(params.input.side) == (params.input.power or 15) then
                 sleep(params.filter.timeout or 5)
             end
 
