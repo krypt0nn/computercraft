@@ -3,6 +3,7 @@
         "excavate",
         "lib/fuel",
         "lib/excavation",
-        "require"
+        "require",
+        "lib/smart-filter"
     ]
 }
