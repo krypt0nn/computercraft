@@ -1,15 +1,16 @@
 local function info()
     return {
-        version = 1
+        version = 2,
+        rednet = {
+            protocol = "new_moscow/smart_filter"
+        }
     }
 end
 
 -- start({
 --     filter = {
---         name    = "kelp smart filter",
---         slave   = "right",
---         master  = "left",
---         save    = "storage.data"
+--         name   = "kelp smart filter",
+--         save   = "storage.data"
 --     },
 --     input = {
 --         side    = "top",
@@ -30,6 +31,10 @@ end
 --     items = {
 --         name     = "kelp",
 --         quantity = 64
+--     },
+--     rednet = {
+--         side   = "back",
+--         master = 12
 --     }
 -- })
 
@@ -49,6 +54,13 @@ local function start(params)
             if not stored then
                 stored = 0
             end
+        end
+    end
+
+    -- Enable rednet adapter if param is present
+    if params.rednet then
+        if not rednet.isOpen(params.rednet.side or "back") then
+            rednet.open(params.rednet.side or "back")
         end
     end
 
@@ -92,13 +104,52 @@ local function start(params)
                     params = params
                 })
             end
+
+            -- Send stats to the master
+            if params.rednet and params.rednet.master then
+                rednet.send(params.rednet.master, {
+                    filter = {
+                        name = params.filter.name
+                    },
+                    items = {
+                        name = params.items.name,
+                        stored = stored
+                    }
+                }, info().rednet.protocol)
+            end
         end
 
-        sleep(params.input.timeout or 3)
+        sleep(params.input.timeout or 5)
+    end
+end
+
+-- listen({
+--     side = "back",
+--     update = function(sender, params)
+--         print("Filter id: " .. sender)
+--         print("Filter name: " .. params.filter.name)
+--         print("Filter items name: " .. params.items.name)
+--         print("Filter items stored: " .. params.items.stored)
+--     end
+-- })
+
+local function listen(params)
+    -- Enable rednet adapter
+    if not rednet.isOpen(params.side or "back") then
+        rednet.open(params.side or "back")
+    end
+
+    while true do
+        local sender, message = rednet.receive(info().rednet.protocol)
+
+        if params.update then
+            params.update(sender, message)
+        end
     end
 end
 
 return {
-    info  = info,
-    start = start
+    info   = info,
+    start  = start,
+    listen = listen
 }
