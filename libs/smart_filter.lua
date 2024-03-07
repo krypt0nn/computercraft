@@ -1,6 +1,6 @@
 local function info()
     return {
-        version = 3,
+        version = 4,
         rednet = {
             protocol = "new_moscow/smart_filter"
         }
@@ -72,6 +72,8 @@ local function start(params)
         end
     end
 
+    local lastInputTime = os.clock()
+
     while true do
         -- If input signal detected
         if redstone.getAnalogInput(params.input.side or "right") == (params.input.power or 15) then
@@ -94,8 +96,13 @@ local function start(params)
             -- Disable output signal
             redstone.setAnalogOutput(params.output.side or "left", 15 - (params.output.power or 15))
 
+            -- Calculate output speed
+            local outputTimeDelta = os.clock() - lastInputTime
+
+            lastInputTime = os.clock()
+
             -- Update stored items counter
-            stored = stored + params.items.quantity or 64
+            stored = stored + (params.items.quantity or 64)
 
             -- Save stored items counter if option is given
             if params.filter.save then
@@ -108,8 +115,11 @@ local function start(params)
             -- Call output update function if available
             if params.output.update then
                 params.output.update({
-                    stored = stored,
-                    params = params
+                    stored   = stored,
+                    time     = outputTimeDelta,
+                    quantity = params.items.quantity or 64,
+                    speed    = (params.items.quantity or 64) / outputTimeDelta,
+                    params   = params
                 })
             end
 
@@ -119,10 +129,18 @@ local function start(params)
                     filter = {
                         name = params.filter.name
                     },
+                    computer = {
+                        label = os.getComputerLabel(),
+                        id = os.getComputerID()
+                    },
                     items = {
-                        name = params.items.name,
-                        stored = stored
-                    }
+                        name     = params.items.name,
+                        stored   = stored,
+                        time     = outputTimeDelta,
+                        quantity = params.items.quantity or 64,
+                        speed    = (params.items.quantity or 64) / outputTimeDelta
+                    },
+                    params = params
                 }, info().rednet.protocol)
             end
         end
