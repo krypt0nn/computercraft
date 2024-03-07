@@ -1,6 +1,6 @@
 local function info()
     return {
-        version = 2,
+        version = 3,
         rednet = {
             protocol = "new_moscow/smart_filter"
         }
@@ -41,6 +41,14 @@ end
 local function start(params)
     local stored = 0
 
+    -- Set default redstone signals
+    for _, side in pairs(redstone.getSides()) do
+        redstone.setAnalogOutput(side, 0)
+    end
+
+    -- Disable output signal
+    redstone.setAnalogOutput(params.output.side or "left", 15 - (params.output.power or 15))
+
     -- Read save file if available
     if params.filter.save then
         local file = fs.open(params.filter.save, "r")
@@ -66,7 +74,7 @@ local function start(params)
 
     while true do
         -- If input signal detected
-        if redstone.getAnalogInput(params.input.side) == (params.input.power or 15) then
+        if redstone.getAnalogInput(params.input.side or "right") == (params.input.power or 15) then
             -- Call input update function if available
             if params.input.update then
                 params.input.update({
@@ -76,15 +84,15 @@ local function start(params)
             end
 
             -- Enable output signal
-            redstone.setAnalogOutput(params.output.side, params.output.power or 15)
+            redstone.setAnalogOutput(params.output.side or "left", params.output.power or 15)
 
             -- Wait until input is available
-            while redstone.getAnalogInput(params.input.side) == (params.input.power or 15) do
+            while redstone.getAnalogInput(params.input.side or "right") == (params.input.power or 15) do
                 sleep(params.output.timeout or 0.5)
             end
 
             -- Disable output signal
-            redstone.setAnalogOutput(params.output.side, 15 - (params.output.power or 15))
+            redstone.setAnalogOutput(params.output.side or "left", 15 - (params.output.power or 15))
 
             -- Update stored items counter
             stored = stored + params.items.quantity or 64
