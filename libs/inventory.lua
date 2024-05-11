@@ -1,6 +1,6 @@
 local function info()
     return {
-        version = 4
+        version = 5
     }
 end
 
