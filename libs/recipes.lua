@@ -1,6 +1,6 @@
 local function info()
     return {
-        version = 4
+        version = 5
     }
 end
 
@@ -25,10 +25,14 @@ local function craft(params)
 
     for _, item in pairs(params.recipe) do
         if item.name and item.count then
-            table.insert(input, {
+            value = input[item.name] or {
                 name  = item.name,
-                count = item.count
-            })
+                count = 0
+            }
+
+            value.count = value.count + item.count
+
+            input[item.name] = value
         end
     end
 
@@ -50,6 +54,17 @@ end
 -- List all known recipes
 local function recipes()
     return {
+        -- Planks
+        craft({
+            recipe = {
+                { name = "minecraft:spruce_log", count = 1 }
+            },
+            result = {
+                name  = "minecraft:spruce_planks",
+                count = 4
+            }
+        }),
+
         -- Chest
         craft({
             recipe = {
@@ -93,7 +108,10 @@ end
 local function findRecipeExecutionQueue(available, item) -- TODO: quantity (craft)
     for _, recipe in pairs(findRecipes(item)) do
         local remainingResources = available
-        local queue = {}
+
+        local queue = {
+          recipe
+        }
 
         local correctRecipe = true
 
@@ -103,7 +121,7 @@ local function findRecipeExecutionQueue(available, item) -- TODO: quantity (craf
             if not remainingResources[input.name] then
                 craft = input.count
             elseif input.count > remainingResources[input.name].count then
-                craft = input - remainingResources[input.name].count
+                craft = input.count - remainingResources[input.name].count
 
                 remainingResources[input.name].count = 0
             else
