@@ -1,6 +1,6 @@
 local function info()
     return {
-        version = 10
+        version = 11
     }
 end
 
@@ -33,7 +33,7 @@ local function listItems(name)
     local inventoryType = getInventoryType(name)
 
     if not inventoryType then
-        return nil
+        error("Failed to identify type of given inventory")
     end
 
     local itemsRaw = {}
@@ -70,9 +70,32 @@ local function listItems(name)
     return items
 end
 
+-- Find an item in given inventory with given name
+-- If many items have the same name, return the first found
+local function findItem(inventory, name)
+    local items = listItems(inventory)
+
+    if not items then
+        error("Failed to list items in given inventory")
+    end
+
+    if items[name] then
+        return items[name]
+    end
+
+    for _, item in pairs(items) do
+        if string.find(item.name, name) or string.find(item.title, name) then
+            return item
+        end
+    end
+
+    return nil
+end
+
 return {
     info = info,
     getInventoryType = getInventoryType,
     isInventory = isInventory,
+    findItem = findItem,
     listItems = listItems
 }
