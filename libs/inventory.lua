@@ -1,39 +1,32 @@
 local function info()
     return {
-        version = 3
+        version = 4
     }
+end
+
+-- Get type of given inventory
+local function getInventoryType(name)
+    local inventory = peripheral.wrap(name) or return nil
+
+    for name, _ in pairs(inventory) do
+        if name == "pullItems" then
+            return "chest"
+        elseif name == "pullItem" then
+            return "drawer"
+        end
+    end
+
+    return nil
 end
 
 -- Check if given peripheral name is an inventory
 local function isInventory(name)
-    local pullItems = false
-    local pushItems = false
-    local list = false
-
-    local inventory = peripheral.wrap(name)
-
-    if not inventory then
-        return false
-    end
-
-    for name, _ in pairs(inventory) do
-        if name == "pullItems" then
-            pullItems = true
-        elseif name == "pushItems" then
-            pushItems = true
-        elseif name == "list" then
-            list = true
-        end
-    end
-
-    return pullItems and pushItems and list
+    return getInventoryType(name) ~= nil
 end
 
 -- Get table of items in given inventory
 local function listItems(name)
-    if not isInventory(name) then
-        return nil
-    end
+    local inventoryType = getInventoryType(name) or return nil
 
     local itemsRaw = peripheral.wrap(name).list()
     local items = {}
@@ -41,6 +34,7 @@ local function listItems(name)
     for _, item in pairs(itemsRaw) do
         local value = items[item.name] or {
             name  = item.name,
+            title = if inventoryType == "drawer" then item.displayName else item.name,
             count = 0
         }
 
