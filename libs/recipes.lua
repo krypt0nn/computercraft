@@ -1,6 +1,6 @@
 local function info()
     return {
-        version = 3
+        version = 4
     }
 end
 
@@ -88,9 +88,58 @@ local function findRecipes(item)
     return foundRecipes
 end
 
+-- Try to find the most optimal recipe execution queue
+-- to craft an item from available resources
+local function findRecipeExecutionQueue(available, item) -- TODO: quantity (craft)
+    for _, recipe in pairs(findRecipes(item)) do
+        local remainingResources = available
+        local queue = {}
+
+        local correctRecipe = true
+
+        for _, input in pairs(recipe.input) do
+            local craft = 0
+
+            if not remainingResources[input.name] then
+                craft = input.count
+            elseif input.count > remainingResources[input.name].count then
+                craft = input - remainingResources[input.name].count
+
+                remainingResources[input.name].count = 0
+            else
+                remainingResources[input.name].count = remainingResources[input.name].count - input.count
+            end
+
+            -- TODO: respect craft variable
+            if craft > 0 then
+                local inputCraftQueue = findRecipeExecutionQueue(remainingResources, input.name)
+
+                if not inputCraftQueue then
+                    correctRecipe = false
+
+                    break
+                end
+
+                for _, oldQueue in pairs(queue) do
+                    table.insert(inputCraftQueue, oldQueue)
+                end
+
+                queue = inputCraftQueue
+            end
+        end
+
+        if correctRecipe then
+            return queue
+        end
+    end
+
+    return nil
+end
+
 return {
     info = info,
     craft = craft,
     recipes = recipes,
-    findRecipes = findRecipes
+    findRecipes = findRecipes,
+    findRecipeExecutionQueue = findRecipeExecutionQueue
 }
