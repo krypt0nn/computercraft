@@ -1,6 +1,6 @@
 local function info()
     return {
-        version = 2
+        version = 3
     }
 end
 
@@ -77,7 +77,7 @@ local function findRecipes(item)
 
     for _, recipe in pairs(recipes()) do
         for _, output in pairs(recipe.output) do
-            if string:find(output.name, item) then
+            if string.find(output.name, item) then
                 table.insert(foundRecipes, recipe)
 
                 break
