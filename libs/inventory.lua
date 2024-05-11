@@ -1,6 +1,6 @@
 local function info()
     return {
-        version = 13
+        version = 14
     }
 end
 
@@ -111,12 +111,12 @@ local function moveItems(from, to, name, amount)
         return nil
     end
 
-    if fromType == "chest" then
+    if fromType == "chest" and toType == "chest" then
         local moved = 0
 
-        for slot in item.slots do
-            if slot.count >= amount then
-                moved = moved + peripheral.wrap(from).pushItems(to, slot.slot, amount)
+        for _, slot in pairs(item.slots) do
+            if slot.count >= amount - moved then
+                moved = moved + peripheral.wrap(from).pushItems(to, slot.slot, amount - moved)
             else
                 moved = moved + peripheral.wrap(from).pushItems(to, slot.slot)
             end
@@ -127,6 +127,8 @@ local function moveItems(from, to, name, amount)
         end
 
         return moved
+    elseif toType == "drawer" then
+        return peripheral.wrap(to).pullItem(from, item.name, amount)
     elseif fromType == "drawer" then
         return peripheral.wrap(from).pushItem(to, item.name, amount)
     else
