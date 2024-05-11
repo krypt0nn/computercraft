@@ -48,6 +48,7 @@ end
 
 return {
     info = info,
+    getInventoryType = getInventoryType,
     isInventory = isInventory,
     listItems = listItems
 }
