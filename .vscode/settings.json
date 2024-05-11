@@ -5,6 +5,7 @@
         "lib/excavation",
         "require",
         "lib/smart-filter",
-        "lib/inventory"
+        "lib/inventory",
+        "lib/recipes"
     ]
 }
