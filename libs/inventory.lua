@@ -1,6 +1,6 @@
 local function info()
     return {
-        version = 11
+        version = 12
     }
 end
 
@@ -44,10 +44,10 @@ local function listItems(name)
     elseif inventoryType == "drawer" then
         itemsRaw = peripheral.wrap(name).items()
     else
-        error("Unknown inventory type: " .. inventoryType)
+        error("Unsupported inventory type: " .. inventoryType)
     end
 
-    for _, item in pairs(itemsRaw) do
+    for slot, item in pairs(itemsRaw) do
         if item.name and item.count then
             local title = item.name
 
@@ -58,10 +58,13 @@ local function listItems(name)
             local value = items[item.name] or {
                 name  = item.name,
                 title = title,
-                count = 0
+                slots = {}
             }
 
-            value.count = value.count + item.count
+            value.slots[slot] = {
+                slot = slot,
+                count = item.count
+            }
 
             items[item.name] = value
         end
@@ -92,10 +95,50 @@ local function findItem(inventory, name)
     return nil
 end
 
+-- Move items from one inventory to another
+-- Returns number of items moved. Can be lower than "amount"
+local function moveItems(from, to, name, amount)
+    local fromType = getInventoryType(from)
+    local toType = getInventoryType(to)
+
+    if not fromType or not toType then
+        error("Failed to identify types of given inventories. Are they valid?")
+    end
+
+    local item = findItem(from, name)
+
+    if not item then
+        return nil
+    end
+
+    if fromType == "chest" then
+        local moved = 0
+
+        for slot in item.slots do
+            if slot.count >= amount then
+                moved = moved + peripheral.wrap(from).pushItems(to, slot.slot, amount)
+            else
+                moved = moved + peripheral.wrap(from).pushItems(to, slot.slot)
+            end
+
+            if moved >= amount then
+                return moved
+            end
+        end
+
+        return moved
+    elseif fromType == "drawer" then
+        return peripheral.wrap(from).pushItem(to, name, amount)
+    else
+        error("Unsupported inventory type: " .. inventoryType)
+    end
+end
+
 return {
     info = info,
     getInventoryType = getInventoryType,
     isInventory = isInventory,
+    listItems = listItems,
     findItem = findItem,
-    listItems = listItems
+    moveItems = moveItems
 }
