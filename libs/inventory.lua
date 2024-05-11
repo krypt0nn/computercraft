@@ -1,6 +1,6 @@
 local function info()
     return {
-        version = 8
+        version = 9
     }
 end
 
@@ -36,8 +36,16 @@ local function listItems(name)
         return nil
     end
 
-    local itemsRaw = peripheral.wrap(name).list()
+    local itemsRaw = {}
     local items = {}
+
+    if inventoryType == "chest" then
+        itemsRaw = peripheral.wrap(name).list()
+    elseif inventoryType == "drawer" then
+        itemsRaw = peripheral.wrap(name).items()
+    else
+        error("Unknown inventory type: " .. inventoryType)
+    end
 
     for _, item in pairs(itemsRaw) do
         local title = item.name
