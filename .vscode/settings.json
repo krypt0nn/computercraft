@@ -4,6 +4,7 @@
         "lib/fuel",
         "lib/excavation",
         "require",
-        "lib/smart-filter"
+        "lib/smart-filter",
+        "lib/inventory"
     ]
 }
