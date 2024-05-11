@@ -3,9 +3,14 @@ local packages = dofile("require.lua")({
     cache = "cache",
     packages = {
         inventory = {
-            minimalVersion = 1
+            minimalVersion = 2
         }
     }
 })
 
+local side = "left"
+local inventory = "minecraft:chest_2"
 
+if not packages.inventory.isInventory(side, inventory) then
+    error("Wrong inventory")
+end

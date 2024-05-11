@@ -1,6 +1,6 @@
 local function info()
     return {
-        version = 1
+        version = 2
     }
 end
 
@@ -11,6 +11,10 @@ local function isInventory(side, name)
     local list = false
 
     local methods = peripheral.wrap(side).getMethodsRemote(name)
+
+    if not methods then
+        return false
+    end
 
     for _, name in pairs(methods) do
         if name == "pullItems" then
