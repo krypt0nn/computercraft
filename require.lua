@@ -130,19 +130,7 @@ return function(params)
         end
 
         -- Load package from string
-        local status, result = pcall(loadstring, package)
-
-        if not status then
-            error("Failed to load package [" .. packageName .. "]: " .. result)
-        end
-
-        local status, result = pcall(result)
-
-        if not status then
-            error("Failed to execute package [" .. packageName .. "]: " .. result)
-        end
-
-        package = result
+        package = loadstring(package)()
 
         -- Verify requested package
         if not package.info then
