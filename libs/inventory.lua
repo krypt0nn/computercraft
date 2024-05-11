@@ -1,12 +1,16 @@
 local function info()
     return {
-        version = 7
+        version = 8
     }
 end
 
 -- Get type of given inventory
 local function getInventoryType(name)
-    local inventory = peripheral.wrap(name) or return nil
+    local inventory = peripheral.wrap(name)
+
+    if not inventory then
+        return nil
+    end
 
     for name, _ in pairs(inventory) do
         if name == "pullItems" then
@@ -26,7 +30,11 @@ end
 
 -- Get table of items in given inventory
 local function listItems(name)
-    local inventoryType = getInventoryType(name) or return nil
+    local inventoryType = getInventoryType(name)
+
+    if not inventoryType then
+        return nil
+    end
 
     local itemsRaw = peripheral.wrap(name).list()
     local items = {}
