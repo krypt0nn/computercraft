@@ -1,6 +1,6 @@
 local function info()
     return {
-        version = 5
+        version = 6
     }
 end
 
@@ -34,7 +34,7 @@ local function listItems(name)
     for _, item in pairs(itemsRaw) do
         local value = items[item.name] or {
             name  = item.name,
-            title = if inventoryType == "drawer" then item.displayName else item.name,
+            title = if inventoryType == "drawer" then item.displayName else item.name end,
             count = 0
         }
 
