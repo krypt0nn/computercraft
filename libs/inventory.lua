@@ -48,7 +48,7 @@ local function listItems(name)
     end
 
     for _, item in pairs(itemsRaw) do
-        if item then
+        if item.name and item.count then
             local title = item.name
 
             if inventoryType == "drawer" then
