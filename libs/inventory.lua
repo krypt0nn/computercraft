@@ -1,6 +1,6 @@
 local function info()
     return {
-        version = 14
+        version = 15
     }
 end
 
@@ -58,13 +58,16 @@ local function listItems(name)
             local value = items[item.name] or {
                 name  = item.name,
                 title = title,
+                count = 0,
                 slots = {}
             }
 
             value.slots[slot] = {
-                slot = slot,
+                slot  = slot,
                 count = item.count
             }
+
+            value.count = value.count + item.count
 
             items[item.name] = value
         end
