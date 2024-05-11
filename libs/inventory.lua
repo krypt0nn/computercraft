@@ -1,6 +1,6 @@
 local function info()
     return {
-        version = 12
+        version = 13
     }
 end
 
@@ -128,7 +128,7 @@ local function moveItems(from, to, name, amount)
 
         return moved
     elseif fromType == "drawer" then
-        return peripheral.wrap(from).pushItem(to, name, amount)
+        return peripheral.wrap(from).pushItem(to, item.name, amount)
     else
         error("Unsupported inventory type: " .. inventoryType)
     end
