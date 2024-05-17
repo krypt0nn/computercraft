@@ -1,9 +1,6 @@
 local function info()
     return {
-        version = 1,
-        rednet = {
-            protocol = "adeptus_mechanicus/crafter"
-        }
+        version = 2
     }
 end
 
@@ -17,7 +14,7 @@ local function sendRecipe(crafterId, recipe)
     return rednet.send(crafterId, {
         version = 1,
         recipe = recipe
-    }, info().rednet.protocol)
+    })
 end
 
 -- Start recipes processing on the turtle
@@ -27,9 +24,11 @@ local function start(serverId)
     end
 
     while true do
-        local sender, command = rednet.receive(info().rednet.protocol)
+        local sender, command = rednet.receive()
 
         if sender == serverId then
+            print("[*] received crafting request")
+
             if command.recipe.action ~= "craft" then
                 print("[!] unsupported recipe action: " .. command.recipe.action)
             else
@@ -83,7 +82,7 @@ local function start(serverId)
                 -- Put crafter item to the storage
                 turtle.drop()
 
-                print("[*] crafter [" .. craftedItem.name .. "] x" .. craftedItem.count)
+                print("[*] crafted [" .. craftedItem.name .. "] x" .. craftedItem.count)
             end
         end
     end
