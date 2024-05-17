@@ -3,7 +3,7 @@ local packages = dofile("require.lua")({
     cache = "cache",
     packages = {
         crafter = {
-            minimalVersion = 2
+            minimalVersion = 3
         }
     }
 })
@@ -24,4 +24,4 @@ print()
 
 rednet.open(modem)
 
-packages.crafter.start(serverId)
+packages.crafter.start(tonumber(serverId))
