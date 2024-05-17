@@ -6,6 +6,7 @@
         "require",
         "lib/smart-filter",
         "lib/inventory",
-        "lib/recipes"
+        "lib/recipes",
+        "lib/json"
     ]
 }
