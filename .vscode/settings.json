@@ -9,6 +9,7 @@
         "lib/recipes",
         "lib/json",
         "apps/craft",
-        "lib/crafter"
+        "lib/crafter",
+        "apps/turtle_craft"
     ]
 }
