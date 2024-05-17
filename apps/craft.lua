@@ -18,13 +18,13 @@ if not packages.inventory.isInventory(inventory) then
 end
 
 while true do
-    print("What should I craft?")
+    io.write("What should I craft? ")
 
-    local name = io.read("*l")
+    local name = io.read()
 
-    print("How many?")
+    io.write("How many? ")
 
-    local count = io.read("*n")
+    local count = io.read()
 
     local craftQueue = packages.recipes.findRecipeExecutionQueue(
         packages.inventory.listItems(inventory),
