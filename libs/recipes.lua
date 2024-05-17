@@ -1,6 +1,6 @@
 local function info()
     return {
-        version = 9
+        version = 10
     }
 end
 
@@ -36,10 +36,10 @@ local function craft(params)
         end
     end
 
-    table.insert(output, {
+    output[params.result.name] = {
         name  = params.result.name,
         count = params.result.count
-    })
+    }
 
     return {
         action = "craft",
