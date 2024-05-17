@@ -1,6 +1,9 @@
 local function info()
     return {
-        version = 2
+        version = 3,
+        rednet = {
+            protocol = "adeptus_mechanicus/crafter"
+        }
     }
 end
 
@@ -14,7 +17,7 @@ local function sendRecipe(crafterId, recipe)
     return rednet.send(crafterId, {
         version = 1,
         recipe = recipe
-    })
+    }, info().rednet.protocol)
 end
 
 -- Start recipes processing on the turtle
@@ -24,7 +27,7 @@ local function start(serverId)
     end
 
     while true do
-        local sender, command = rednet.receive()
+        local sender, command = rednet.receive(info().rednet.protocol)
 
         if sender == serverId then
             print("[*] received crafting request")
