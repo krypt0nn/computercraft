@@ -7,6 +7,7 @@
         "lib/smart-filter",
         "lib/inventory",
         "lib/recipes",
-        "lib/json"
+        "lib/json",
+        "apps/craft"
     ]
 }
