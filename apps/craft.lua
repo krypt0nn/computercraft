@@ -6,7 +6,10 @@ local packages = dofile("require.lua")({
             minimalVersion = 15
         },
         recipes = {
-            minimalVersion = 9
+            minimalVersion = 10
+        },
+        crafter = {
+            minimalVersion = 1
         }
     }
 })
@@ -16,6 +19,26 @@ local inventory = "extended_drawers:access_point_0"
 if not packages.inventory.isInventory(inventory) then
     error("Wrong inventory name")
 end
+
+io.write("Rednet modem side: ")
+
+local modem = io.read()
+
+io.write("Crafting turtle ID: ")
+
+local crafterId = io.read()
+
+io.write("Crafting turtle input inventory: ")
+
+local crafterInputInventory = io.read()
+
+if not packages.inventory.isInventory(crafterInputInventory) then
+    error("Given name is not an actual inventory")
+end
+
+print()
+
+rednet.open(modem)
 
 while true do
     io.write("What should I craft? ")
@@ -34,7 +57,45 @@ while true do
 
     if craftQueue then
         print("Found craft with " .. #craftQueue .. " steps")
+
+        for step, recipe in pairs(craftQueue) do
+            local prefix = "[" .. math.floor(step / #craftQueue * 100) .. "%] "
+
+            if recipe.action ~= "craft" then
+                print(prefix .. "Not a crafting action. Stopping execution")
+
+                break
+            else
+                local continueCrafting = true
+
+                for _, input in pairs(recipe.params.recipe) do
+                    if packages.inventory.move(inventory, crafterInputInventory, input.name, input.count) < input.count then
+                        print(prefix .. "Couldn't transfer enough resources. Stopping execution")
+
+                        continueCrafting = false
+
+                        break
+                    end
+                end
+
+                if continueCrafting then
+                    if not packages.crafter.sendRecipe(crafterId, recipe) then
+                        print(prefix .. "Couldn't request recipe crafting. Stopping execution")
+
+                        break
+                    end
+
+                    -- FIXME: wait when shit will actually be crafted
+
+                    sleep(4)
+
+                    print(prefix .. "Crafted")
+                end
+            end
+        end
     else
         print("Couldn't find possible craft")
     end
+
+    print()
 end
