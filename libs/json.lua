@@ -390,11 +390,12 @@ end
 
 local function info()
   return {
-      version = 1
+      version = 2
   }
 end
 
 return {
   info = info,
-  json = json
+  encode = json.encode,
+  decode = json.decode
 }
