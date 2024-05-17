@@ -384,5 +384,17 @@ function json.decode(str)
   return res
 end
 
+------------------------------------------
+-- KRypt0n_: my require.lua integration --
+------------------------------------------
 
-return json
+local function info()
+  return {
+      version = 1
+  }
+end
+
+return {
+  info = info,
+  json = json
+}
