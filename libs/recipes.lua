@@ -1,6 +1,6 @@
 local function info()
     return {
-        version = 7
+        version = 8
     }
 end
 
@@ -117,7 +117,7 @@ local function findRecipeExecutionQueue(available, item, count)
         local correctQueue = true
 
         -- Put crafts to the queue to get needed amount of items
-        for i = 0, count / recipe.count do
+        for i = 1, math.max(count / recipe.count, 1) do
             local correctRecipe = true
 
             -- Go through recipe input resources
