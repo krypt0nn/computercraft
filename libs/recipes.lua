@@ -1,6 +1,6 @@
 local function info()
     return {
-        version = 6
+        version = 7
     }
 end
 
@@ -121,7 +121,7 @@ local function findRecipeExecutionQueue(available, item, count)
             local correctRecipe = true
 
             -- Go through recipe input resources
-            for _, input in pairs(recipe.input) do
+            for _, input in pairs(recipe.recipe.input) do
                 local craft = 0
 
                 -- If none available - craft needed amount
