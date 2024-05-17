@@ -1,6 +1,6 @@
 local function info()
     return {
-        version = 10
+        version = 11
     }
 end
 
@@ -65,6 +65,19 @@ local function recipes()
             }
         }),
 
+        -- Slabs
+        craft({
+            recipe = {
+                { name = "minecraft:spruce_planks", count = 1 },
+                { name = "minecraft:spruce_planks", count = 1 },
+                { name = "minecraft:spruce_planks", count = 1 }
+            },
+            result = {
+                name  = "minecraft:spruce_slab",
+                count = 6
+            }
+        }),
+
         -- Chest
         craft({
             recipe = {
@@ -80,6 +93,63 @@ local function recipes()
             },
             result = {
                 name  = "minecraft:chest",
+                count = 1
+            }
+        }),
+
+        -- Barrel
+        craft({
+            recipe = {
+                { name = "minecraft:spruce_planks", count = 1 },
+                { name = "minecraft:spruce_slab", count = 1 },
+                { name = "minecraft:spruce_planks", count = 1 },
+                { name = "minecraft:spruce_planks", count = 1 },
+                nil,
+                { name = "minecraft:spruce_planks", count = 1 },
+                { name = "minecraft:spruce_planks", count = 1 },
+                { name = "minecraft:spruce_slab", count = 1 },
+                { name = "minecraft:spruce_planks", count = 1 }
+            },
+            result = {
+                name  = "minecraft:barrel",
+                count = 1
+            }
+        }),
+
+        -- Drawer
+        craft({
+            recipe = {
+                { name = "minecraft:spruce_log", count = 1 },
+                { name = "minecraft:spruce_planks", count = 1 },
+                { name = "minecraft:spruce_log", count = 1 },
+                { name = "minecraft:spruce_planks", count = 1 },
+                { name = "minecraft:chest", count = 1 },
+                { name = "minecraft:spruce_planks", count = 1 },
+                { name = "minecraft:spruce_log", count = 1 },
+                { name = "minecraft:spruce_planks", count = 1 },
+                { name = "minecraft:spruce_log", count = 1 }
+            },
+            result = {
+                name  = "extended_drawers:drawer",
+                count = 1
+            }
+        }),
+
+        -- Quad Drawer
+        craft({
+            recipe = {
+                { name = "minecraft:spruce_log", count = 1 },
+                { name = "minecraft:chest", count = 1 },
+                { name = "minecraft:spruce_log", count = 1 },
+                { name = "minecraft:chest", count = 1 },
+                { name = "minecraft:spruce_planks", count = 1 },
+                { name = "minecraft:chest", count = 1 },
+                { name = "minecraft:spruce_log", count = 1 },
+                { name = "minecraft:chest", count = 1 },
+                { name = "minecraft:spruce_log", count = 1 }
+            },
+            result = {
+                name  = "extended_drawers:quad_drawer",
                 count = 1
             }
         })
