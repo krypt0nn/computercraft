@@ -8,6 +8,7 @@
         "lib/inventory",
         "lib/recipes",
         "lib/json",
-        "apps/craft"
+        "apps/craft",
+        "lib/crafter"
     ]
 }
