@@ -259,12 +259,8 @@ local function batchRecipeExecutionQueue(queue, name)
     local dependencies = getQueueDependencyTree(queue)
     local dependenciesQueue = resolveDependencyTree(dependencies, name)
 
-    for _, recipe in pairs(dependenciesQueue) do
-        for _, output in pairs(recipe.output) do
-            print("[dep_queue] " .. output.name .. " x" .. output.count)
-
-            break
-        end
+    for _, dependency in pairs(dependenciesQueue) do
+        print("[dep_queue] " .. dependency.name .. " x" .. dependency.count)
     end
 
     local queue = {}
