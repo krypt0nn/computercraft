@@ -1,6 +1,6 @@
 local function info()
     return {
-        version = 12
+        version = 13
     }
 end
 
@@ -65,7 +65,7 @@ local function recipes(folders)
     end
 
     for _, folder in pairs(folders) do
-        for _, path in fs.find(folder .. "/*.lua") do
+        for _, path in pairs(fs.find(folder .. "/*.lua")) do
             local file_recipes = loadfile(path)
 
             if type(file_recipes) == "function" then
