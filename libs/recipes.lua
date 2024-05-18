@@ -1,6 +1,6 @@
 local function info()
     return {
-        version = 14
+        version = 15
     }
 end
 
@@ -97,7 +97,7 @@ local function findRecipes(item, folders)
             if string.find(output.name, item) then
                 table.insert(foundRecipes, {
                     recipe = recipe,
-                    count = output.count
+                    count  = output.count
                 })
 
                 break
@@ -186,10 +186,84 @@ local function findRecipeExecutionQueue(available, item, count, folders)
     return nil
 end
 
+-- Get crafting dependency tree from the queue
+local function getQueueDependencyTree(queue)
+    local tree = {}
+
+    for _, recipe in pairs(queue) do
+        for _, output in pairs(recipe.output) do
+            local value = tree[output.name] or {
+                name       = output.name,
+                count      = output.count,
+                input      = recipe.input,
+                recipe     = recipe,
+                multiplier = 0
+            }
+
+            value.multiplier = value.multiplier + 1
+
+            tree[output.name] = value
+        end
+    end
+
+    return tree
+end
+
+-- Convert dependency tree to the dependency queue
+-- starting from the [name] item
+local function resolveDependencyTree(tree, name)
+    local queue = {}
+
+    if tree[name] then
+        table.insert(queue, tree[name])
+    end
+
+    local i = 1
+
+    while queue[i] do
+        -- To prevent recursions
+        tree[queue[i].name].used = true
+
+        for _, intput in pairs(tree[queue[i].name].input) do
+            if not tree[input].used then
+                table.insert(queue, tree[input])
+            end
+        end
+
+        i = i + 1
+    end
+
+    return queue
+end
+
+-- Batch-optimize found crafting queue around given output name
+local function batchRecipeExecutionQueue(queue, name)
+    local dependencies = getQueueDependencyTree(queue)
+    local dependenciesQueue = resolveDependencyTree(dependencies, name)
+
+    local queue = {}
+
+    for _, step in pairs(dependenciesQueue) do
+        print("[batching] " .. step.name .. " - " .. step.multiplier)
+
+        -- TODO: respect multiplier
+        table.insert(queue, step.recipe)
+    end
+
+    local revQueue = {}
+
+    for i = 1, #queue do
+        table.insert(revQueue, queue[#queue - i + 1])
+    end
+
+    return revQueue
+end
+
 return {
     info = info,
     craft = craft,
     recipes = recipes,
     findRecipes = findRecipes,
-    findRecipeExecutionQueue = findRecipeExecutionQueue
+    findRecipeExecutionQueue = findRecipeExecutionQueue,
+    batchRecipeExecutionQueue = batchRecipeExecutionQueue
 }
