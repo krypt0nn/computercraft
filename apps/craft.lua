@@ -58,6 +58,8 @@ while true do
     if craftQueue then
         print("Found craft with " .. #craftQueue .. " steps")
 
+        local craftStartTime = os.epoch("utc")
+
         for step, recipe in pairs(craftQueue) do
             local prefix = "[" .. math.floor(step / #craftQueue * 100) .. "%] "
 
@@ -78,42 +80,50 @@ while true do
                     end
                 end
 
-                if continueCrafting then
-                    -- Send crafting request to the turtle
-                    if not packages.crafter.sendRecipe(tonumber(crafterId), recipe) then
-                        print(prefix .. "Couldn't request recipe crafting. Stopping execution")
-
-                        break
-                    end
-
-                    local craftedSuffix = ""
-
-                    -- Go through the expected recipe outputs
-                    for _, output in pairs(recipe.output) do
-                        -- Wait until the craft is finished
-                        while true do
-                            sleep(1)
-
-                            if packages.inventory.findItem(crafterInputInventory, output.name) then
-                                break
-                            end
-                        end
-
-                        -- Move it to the storage
-                        packages.inventory.moveItems(crafterInputInventory, inventory, output.name)
-
-                        -- Append suffix
-                        if craftedSuffix == "" then
-                            craftedSuffix = "[" .. output.name .. "] x" .. output.count
-                        else
-                            craftedSuffix = craftedSuffix .. ", [" .. output.name .. "] x" .. output.count
-                        end
-                    end
-
-                    print(prefix .. "Crafted " .. craftedSuffix)
+                if not continueCrafting then
+                    break
                 end
+
+                -- Send crafting request to the turtle
+                if not packages.crafter.sendRecipe(tonumber(crafterId), recipe) then
+                    print(prefix .. "Couldn't request recipe crafting. Stopping execution")
+
+                    break
+                end
+
+                local craftedSuffix = ""
+
+                -- Go through the expected recipe outputs
+                for _, output in pairs(recipe.output) do
+                    -- Wait until the craft is finished
+                    while true do
+                        sleep(1)
+
+                        if packages.inventory.findItem(crafterInputInventory, output.name) then
+                            break
+                        end
+                    end
+
+                    -- Move it to the storage
+                    packages.inventory.moveItems(crafterInputInventory, inventory, output.name)
+
+                    -- Append suffix
+                    if craftedSuffix == "" then
+                        craftedSuffix = "[" .. output.name .. "] x" .. output.count
+                    else
+                        craftedSuffix = craftedSuffix .. ", [" .. output.name .. "] x" .. output.count
+                    end
+                end
+
+                local craftingTime = os.epoch("utc") - craftStartTime
+                local craftingEta = math.round(#craftQueue * craftingTime / step / 10) / 100
+
+                print(prefix .. "Crafted " .. craftedSuffix .. ". ETA: " .. craftingEta .. " sec")
             end
         end
+
+        -- Move crafted thing to the storage
+        packages.inventory.moveItems(crafterInputInventory, inventory, name)
     else
         print("Couldn't find possible craft")
     end
