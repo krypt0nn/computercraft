@@ -116,7 +116,7 @@ while true do
                 end
 
                 local craftingTime = os.epoch("utc") - craftStartTime
-                local craftingEta = math.round(#craftQueue * craftingTime / step / 10) / 100
+                local craftingEta = math.ceil(#craftQueue * craftingTime / step / 10) / 100
 
                 print(prefix .. "Crafted " .. craftedSuffix .. ". ETA: " .. craftingEta .. " sec")
             end
