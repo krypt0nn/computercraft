@@ -79,15 +79,21 @@ while true do
                 end
 
                 if continueCrafting then
+                    -- Send crafting request to the turtle
                     if not packages.crafter.sendRecipe(tonumber(crafterId), recipe) then
                         print(prefix .. "Couldn't request recipe crafting. Stopping execution")
 
                         break
                     end
 
-                    -- FIXME: wait when shit will actually be crafted
+                    -- Wait until the craft is finished
+                    while true do
+                        sleep(1)
 
-                    sleep(4)
+                        if packages.inventory.findItem(crafterInputInventory, name) then
+                            break
+                        end
+                    end
 
                     print(prefix .. "Crafted")
                 end
