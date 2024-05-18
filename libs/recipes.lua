@@ -1,6 +1,6 @@
 local function info()
     return {
-        version = 17
+        version = 18
     }
 end
 
@@ -258,10 +258,44 @@ local function batchRecipeExecutionQueue(queue, name)
     local queue = {}
 
     for _, step in pairs(dependenciesQueue) do
-        print("[batching] " .. step.name .. " - " .. step.multiplier)
+        while step.multiplier > 0 then
+            local batchedRecipe = step.recipe
 
-        -- TODO: respect multiplier
-        table.insert(queue, step.recipe)
+            while step.multiplier > 0 do
+                local batch = true
+
+                -- Verify that all the inputs are lower than a full stack
+                for _, input in pairs(step.recipe.input) do
+                    if batchedRecipe.input[input.name].count + input.count > 64 then
+                        batch = false
+
+                        break
+                    end
+                end
+
+                -- Break current batched recipe if can't continue
+                if not batch then
+                    break
+                end
+
+                -- Batch recipe
+                for _, input in pairs(step.recipe.input) do
+                    batchedRecipe.input[input.name].count = batchedRecipe.input[input.name].count + input.count
+                end
+
+                for _, output in pairs(step.recipe.output) do
+                    batchedRecipe.output[output.name].count = batchedRecipe.output[output.name].count + output.count
+                end
+
+                for i, resource in pairs(step.recipe.params.recipe) do
+                    batchedRecipe.params.recipe[i].count = batchedRecipe.params.recipe[i].count + resource.count
+                end
+
+                step.multiplier = step.multiplier - 1
+            end
+
+            table.insert(queue, batchedRecipe)
+        end
     end
 
     local revQueue = {}
