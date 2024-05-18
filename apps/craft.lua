@@ -92,6 +92,9 @@ while true do
                     break
                 end
 
+                -- Get output inventory state before requesting craft
+                local outputInventoryItems = packages.inventory.listItems(crafterOutputInventory)
+
                 -- Send crafting request to the turtle
                 if not packages.crafter.sendRecipe(tonumber(crafterId), recipe) then
                     print(prefix .. "Couldn't request recipe crafting. Stopping execution")
@@ -107,7 +110,15 @@ while true do
                     while true do
                         sleep(1)
 
-                        if packages.inventory.findItem(crafterOutputInventory, output.name) then
+                        local foundItem = packages.inventory.findItem(crafterOutputInventory, output.name)
+
+                        -- If we have found the item and it either
+                        -- wasn't presented in the output inventory before crafting
+                        -- or its value is different now
+                        -- 
+                        -- This is needed because we can't move some craft results to the
+                        -- output (global storage) inventory
+                        if foundItem ~= nil and (not outputInventoryItems[foundItem.name] or foundItem.count > outputInventoryItems[foundItem.name].count) then
                             break
                         end
                     end
