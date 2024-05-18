@@ -1,6 +1,6 @@
 local function info()
     return {
-        version = 3,
+        version = 4,
         rednet = {
             protocol = "adeptus_mechanicus/crafter"
         }
@@ -20,6 +20,24 @@ local function sendRecipe(crafterId, recipe)
     }, info().rednet.protocol)
 end
 
+-- Convert normal crafting slots numbers
+-- to slots numbers in the crafting turtle
+local function recipeSlotToTurtleSlot(slot)
+    if slot == 1 then return 1 end
+    if slot == 2 then return 2 end
+    if slot == 3 then return 3 end
+
+    if slot == 4 then return 5 end
+    if slot == 5 then return 6 end
+    if slot == 6 then return 7 end
+
+    if slot == 7 then return 9 end
+    if slot == 8 then return 10 end
+    if slot == 9 then return 11 end
+
+    return nil
+end
+
 -- Start recipes processing on the turtle
 local function start(serverId)
     if not isCrafter() then
@@ -35,28 +53,47 @@ local function start(serverId)
             if command.recipe.action ~= "craft" then
                 print("[!] unsupported recipe action: " .. command.recipe.action)
             else
-                -- Input resources for crafting
-                for slot, input in pairs(command.recipe.params.recipe) do
-                    if input then
-                        if slot == 1 then turtle.select(1) end
-                        if slot == 2 then turtle.select(2) end
-                        if slot == 3 then turtle.select(3) end
+                -- Input all the crafting resources
+                while true do
+                    -- Select and suck some input resources there
+                    turtle.select(16)
+                    turtle.suck()
 
-                        if slot == 4 then turtle.select(5) end
-                        if slot == 5 then turtle.select(6) end
-                        if slot == 6 then turtle.select(7) end
+                    -- Check what did we took from the input inventory
+                    local suckedItem = turtle.getItemDetail()
 
-                        if slot == 7 then turtle.select(9) end
-                        if slot == 8 then turtle.select(10) end
-                        if slot == 9 then turtle.select(11) end
+                    local finished = false
+                    local unneededResource = true
 
-                        turtle.suck(input.count)
+                    -- Try to find it in the recipe
+                    for slot, input in pairs(command.recipe.params.recipe) do
+                        finished = finished or (input.used == true)
 
-                        local suckedItem = turtle.getItemDetail()
+                        if not input.used and input.name == suckedItem.name then
+                            -- If we took too many resources - return unneeded
+                            if suckedItem.count > input.count then
+                                turtle.drop(suckedItem.count - input.count)
+                            end
 
-                        if suckedItem.name ~= input.name then
-                            error("Incorrect resources input. Expected [" .. input.name .. "], got [" .. suckedItem.name .. "] at input slot " .. slot)
+                            -- If we took enough resources - mark resource as taken
+                            -- and move it to the needed slot
+                            if suckedItem.count >= input.count then
+                                input.used = true
+                                unneededResource = false
+
+                                turtle.transferTo(recipeSlotToTurtleSlot(slot), input.count)
+                            end
                         end
+                    end
+
+                    -- Return back unneeded resources
+                    if unneededResource then
+                        turtle.drop()
+                    end
+
+                    -- Stop resources input if everything's done
+                    if finished then
+                        break
                     end
                 end
 
