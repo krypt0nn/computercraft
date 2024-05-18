@@ -6,7 +6,7 @@ local packages = dofile("require.lua")({
             minimalVersion = 15
         },
         recipes = {
-            minimalVersion = 14
+            minimalVersion = 26
         },
         crafter = {
             minimalVersion = 8
@@ -14,37 +14,39 @@ local packages = dofile("require.lua")({
     }
 })
 
-local inventory = "toms_storage:ts.inventory_connector_0"
+------------------------------- Settings -------------------------------
 
-if not packages.inventory.isInventory(inventory) then
-    error("Wrong inventory name")
-end
+-- Rednet modem interface
+local modem = "top"
 
-io.write("Rednet modem side: ")
+-- Crafting turtle ID
+local crafterId = 1
 
-local modem = io.read()
+-- Crafting turtle input inventory interface name
+local crafterInputInventory = "minecraft:barrel_1"
 
-io.write("Crafting turtle ID: ")
+-- Crafting turtle output inventory interface name
+local crafterOutputInventory = "minecraft:barrel_2"
 
-local crafterId = io.read()
+-- Main storage interface name
+local storageInventory = "toms_storage:ts.inventory_connector_0"
 
-io.write("Crafting turtle input inventory (front): ")
+-- Perform recipes queues optimizations (experimental)
+local optimizeRecipes = true
 
-local crafterInputInventory = io.read()
+------------------------------- Settings -------------------------------
 
 if not packages.inventory.isInventory(crafterInputInventory) then
-    error("Given name is not an actual inventory")
+    error("Wrong crafter input inventory name")
 end
-
-io.write("Crafting turtle output inventory (top): ")
-
-local crafterOutputInventory = io.read()
 
 if not packages.inventory.isInventory(crafterOutputInventory) then
-    error("Given name is not an actual inventory")
+    error("Wrong crafter output inventory name")
 end
 
-print()
+if not packages.inventory.isInventory(storageInventory) then
+    error("Wrong main storage inventory name")
+end
 
 rednet.open(modem)
 
@@ -58,13 +60,24 @@ while true do
     local count = io.read()
 
     local craftQueue = packages.recipes.findRecipeExecutionQueue(
-        packages.inventory.listItems(inventory),
+        packages.inventory.listItems(storageInventory),
         name,
         count
     )
 
     if craftQueue then
         print("Found craft with " .. #craftQueue .. " steps")
+
+        if optimizeRecipes then
+            craftQueue = packages.recipes.batchRecipeExecutionQueue(
+                craftQueue,
+                name
+            )
+
+            print("Optimized to " .. #craftQueue .. " steps")
+        end
+
+        print()
 
         local craftStartTime = os.epoch("utc")
 
@@ -79,7 +92,7 @@ while true do
                 local continueCrafting = true
 
                 for _, input in pairs(recipe.params.recipe) do
-                    if packages.inventory.moveItems(inventory, crafterInputInventory, input.name, input.count) < input.count then
+                    if packages.inventory.moveItems(storageInventory, crafterInputInventory, input.name, input.count) < input.count then
                         print(prefix .. "Couldn't transfer enough resources. Stopping execution")
 
                         continueCrafting = false
@@ -124,7 +137,7 @@ while true do
                     end
 
                     -- Move it to the storage
-                    packages.inventory.moveItems(crafterOutputInventory, inventory, output.name)
+                    packages.inventory.moveItems(crafterOutputInventory, storageInventory, output.name)
 
                     -- Append suffix
                     if craftedSuffix == "" then
@@ -142,7 +155,7 @@ while true do
         end
 
         -- Move crafted thing to the storage
-        packages.inventory.moveItems(crafterOutputInventory, inventory, name)
+        packages.inventory.moveItems(crafterOutputInventory, storageInventory, name)
 
         -- Print crafting time
         local craftingTime = math.ceil((os.epoch("utc") - craftStartTime) / 10) / 100
