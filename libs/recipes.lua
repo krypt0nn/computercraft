@@ -1,6 +1,6 @@
 local function info()
     return {
-        version = 25
+        version = 26
     }
 end
 
@@ -277,11 +277,10 @@ local function batchRecipeExecutionQueue(queue, name)
     local queue = {}
 
     for _, step in pairs(dependenciesQueue) do
-        local step = cloneTable(step)
         local repeats = 0
 
         while repeats < step.multiplier do
-            local batchedRecipe = step.recipe
+            local batchedRecipe = cloneTable(step.recipe)
 
             repeats = repeats + 1
 
