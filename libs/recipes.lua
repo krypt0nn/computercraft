@@ -1,6 +1,6 @@
 local function info()
     return {
-        version = 20
+        version = 21
     }
 end
 
@@ -212,6 +212,14 @@ local function resolveDependencyTree(tree, name)
 
     if tree[name] then
         table.insert(queue, tree[name])
+    else
+        for key, value in pairs(tree) do
+            if string.find(key, name) then
+                table.insert(queue, value)
+
+                break
+            end
+        end
     end
 
     local i = 1
@@ -250,6 +258,14 @@ end
 local function batchRecipeExecutionQueue(queue, name)
     local dependencies = getQueueDependencyTree(queue)
     local dependenciesQueue = resolveDependencyTree(dependencies, name)
+
+    for _, recipe in pairs(dependenciesQueue) do
+        for _, output in pairs(recipe.output) do
+            print("[dep_queue] " .. output.name .. " x" .. output.count)
+
+            break
+        end
+    end
 
     local queue = {}
 
