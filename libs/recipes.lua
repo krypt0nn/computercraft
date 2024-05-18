@@ -1,6 +1,6 @@
 local function info()
     return {
-        version = 15
+        version = 16
     }
 end
 
@@ -224,9 +224,9 @@ local function resolveDependencyTree(tree, name)
         -- To prevent recursions
         tree[queue[i].name].used = true
 
-        for _, intput in pairs(tree[queue[i].name].input) do
-            if not tree[input].used then
-                table.insert(queue, tree[input])
+        for _, input in pairs(tree[queue[i].name].input) do
+            if tree[input.name] and not tree[input.name].used then
+                table.insert(queue, tree[input.name])
             end
         end
 
