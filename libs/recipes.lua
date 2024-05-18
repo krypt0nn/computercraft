@@ -1,6 +1,6 @@
 local function info()
     return {
-        version = 16
+        version = 17
     }
 end
 
@@ -222,18 +222,32 @@ local function resolveDependencyTree(tree, name)
 
     while queue[i] do
         -- To prevent recursions
-        tree[queue[i].name].used = true
+        tree[queue[i].name].used = i
 
         for _, input in pairs(tree[queue[i].name].input) do
-            if tree[input.name] and not tree[input.name].used then
+            if tree[input.name] then
                 table.insert(queue, tree[input.name])
+
+                if tree[input.name].used then
+                    queue[tree[input.name].used] = nil
+                end
+
+                tree[input.name].used = #queue
             end
         end
 
         i = i + 1
     end
 
-    return queue
+    local cleanQueue = {}
+
+    for _, recipe in pairs(queue) do
+        if recipe then
+            table.insert(cleanQueue, recipe)
+        end
+    end
+
+    return cleanQueue
 end
 
 -- Batch-optimize found crafting queue around given output name
