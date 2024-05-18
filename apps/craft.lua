@@ -6,7 +6,7 @@ local packages = dofile("require.lua")({
             minimalVersion = 15
         },
         recipes = {
-            minimalVersion = 26
+            minimalVersion = 27
         },
         crafter = {
             minimalVersion = 8
@@ -59,7 +59,7 @@ while true do
 
     local count = io.read()
 
-    local craftQueue = packages.recipes.findRecipeExecutionQueue(
+    local craftQueue, resourcesHint = packages.recipes.findRecipeExecutionQueue(
         packages.inventory.listItems(storageInventory),
         name,
         count
@@ -163,6 +163,14 @@ while true do
         print("Craft finished in " .. craftingTime .. " sec")
     else
         print("Couldn't find possible craft")
+
+        if #resourcesHint > 0 then
+            print("Possible solutions:")
+
+            for _, hint in pairs(resourcesHint) do
+                print("- Add [" .. hint.name .. "] x" .. hint.count)
+            end
+        end
     end
 
     print()
