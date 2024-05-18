@@ -1,6 +1,6 @@
 local function info()
     return {
-        version = 19
+        version = 20
     }
 end
 
@@ -107,10 +107,6 @@ local function findRecipes(item, folders)
 
     return foundRecipes
 end
-
--- TODO: add recipes crafting optimization
---       as the last step before returning the final queue
---       (craft stacks of items instead of one-by-one)
 
 -- Try to find the most optimal recipe execution queue
 -- to craft an item from available resources
@@ -263,12 +259,22 @@ local function batchRecipeExecutionQueue(queue, name)
         while repeats < step.multiplier do
             local batchedRecipe = step.recipe
 
+            repeats = repeats + 1
+
             while repeats < step.multiplier do
                 local batch = true
 
                 -- Verify that all the inputs are lower than a full stack
                 for _, input in pairs(step.recipe.input) do
                     if batchedRecipe.input[input.name].count + input.count > 64 then
+                        batch = false
+
+                        break
+                    end
+                end
+
+                for _, output in pairs(step.recipe.output) do
+                    if batchedRecipe.output[output.name].count + output.count > 64 then
                         batch = false
 
                         break
