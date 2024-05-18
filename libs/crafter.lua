@@ -1,6 +1,6 @@
 local function info()
     return {
-        version = 7,
+        version = 8,
         rednet = {
             protocol = "adeptus_mechanicus/crafter"
         }
@@ -67,22 +67,27 @@ local function start(serverId)
                     -- Try to find it in the recipe
                     for slot, input in pairs(command.recipe.params.recipe) do
                         if not input.used and input.name == suckedItem.name then
-                            -- If we took too many resources - return unneeded
-                            if suckedItem.count > input.count then
-                                turtle.drop(suckedItem.count - input.count)
-                            end
-
                             -- If we took enough resources - mark resource as taken
                             -- and move it to the needed slot
                             if suckedItem.count >= input.count then
                                 input.used = true
                                 unneededResource = false
 
+                                suckedItem.count = suckedItem.count - input.count
+
                                 turtle.transferTo(recipeSlotToTurtleSlot(slot), input.count)
 
-                                break
+                                if suckedItem.count == 0 then
+                                    break
+                                end
                             end
                         end
+                    end
+
+                    -- Return remaining resources to the output storage
+                    -- because we have used it in every possible slot
+                    if suckedItem.count > 0 then
+                        turtle.dropUp()
                     end
 
                     -- Return back unneeded resources
