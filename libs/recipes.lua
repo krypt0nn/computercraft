@@ -1,6 +1,6 @@
 local function info()
     return {
-        version = 23
+        version = 24
     }
 end
 
@@ -254,6 +254,17 @@ local function resolveDependencyTree(tree, name)
     return cleanQueue
 end
 
+-- Clone given table
+local function cloneTable(original)
+	local copy = {}
+
+	for key, value in pairs(original) do
+		copy[key] = value
+	end
+
+	return copy
+end
+
 -- Batch-optimize found crafting queue around given output name
 local function batchRecipeExecutionQueue(queue, name)
     local dependencies = getQueueDependencyTree(queue)
@@ -262,6 +273,7 @@ local function batchRecipeExecutionQueue(queue, name)
     local queue = {}
 
     for _, step in pairs(dependenciesQueue) do
+        local step = cloneTable(step)
         local repeats = 0
 
         while repeats < step.multiplier do
@@ -301,8 +313,6 @@ local function batchRecipeExecutionQueue(queue, name)
 
                 for _, output in pairs(step.recipe.output) do
                     batchedRecipe.output[output.name].count = batchedRecipe.output[output.name].count + output.count
-
-                    print("[batch] " .. output.name .. " x" .. batchedRecipe.output[output.name].count .. "; repeats = " .. repeats .. "; output_count = " .. output.count)
                 end
 
                 for i, resource in pairs(step.recipe.params.recipe) do
