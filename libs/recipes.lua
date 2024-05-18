@@ -1,6 +1,6 @@
 local function info()
     return {
-        version = 21
+        version = 22
     }
 end
 
@@ -259,10 +259,6 @@ local function batchRecipeExecutionQueue(queue, name)
     local dependencies = getQueueDependencyTree(queue)
     local dependenciesQueue = resolveDependencyTree(dependencies, name)
 
-    for _, dependency in pairs(dependenciesQueue) do
-        print("[dep_queue] " .. dependency.name .. " x" .. dependency.count)
-    end
-
     local queue = {}
 
     for _, step in pairs(dependenciesQueue) do
@@ -305,6 +301,8 @@ local function batchRecipeExecutionQueue(queue, name)
 
                 for _, output in pairs(step.recipe.output) do
                     batchedRecipe.output[output.name].count = batchedRecipe.output[output.name].count + output.count
+
+                    print("[batch] " .. output.name .. " x" .. batchedRecipe.output[output.name].count .. "; repeats = " .. repeats)
                 end
 
                 for i, resource in pairs(step.recipe.params.recipe) do
