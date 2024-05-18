@@ -1,6 +1,6 @@
 local function info()
     return {
-        version = 26
+        version = 27
     }
 end
 
@@ -111,6 +111,8 @@ end
 -- Try to find the most optimal recipe execution queue
 -- to craft an item from available resources
 local function findRecipeExecutionQueue(available, item, count, folders)
+    local recipeHints = {}
+
     -- Try to find known recipes for needed item
     for _, recipe in pairs(findRecipes(item, folders)) do
         local remainingResources = available
@@ -151,6 +153,12 @@ local function findRecipeExecutionQueue(available, item, count, folders)
                     if not inputCraftQueue then
                         correctRecipe = false
 
+                        -- Put required item to the hints
+                        table.insert(recipeHints, {
+                            name  = input.name,
+                            count = craft
+                        })
+
                         break
                     end
 
@@ -179,7 +187,7 @@ local function findRecipeExecutionQueue(available, item, count, folders)
     end
 
     -- Recipe wasn't found
-    return nil
+    return nil, recipeHints
 end
 
 -- Get crafting dependency tree from the queue
