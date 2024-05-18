@@ -9,7 +9,7 @@ local packages = dofile("require.lua")({
             minimalVersion = 11
         },
         crafter = {
-            minimalVersion = 6
+            minimalVersion = 7
         }
     }
 })
@@ -28,11 +28,19 @@ io.write("Crafting turtle ID: ")
 
 local crafterId = io.read()
 
-io.write("Crafting turtle input inventory: ")
+io.write("Crafting turtle input inventory (front): ")
 
 local crafterInputInventory = io.read()
 
 if not packages.inventory.isInventory(crafterInputInventory) then
+    error("Given name is not an actual inventory")
+end
+
+io.write("Crafting turtle output inventory (top): ")
+
+local crafterOutputInventory = io.read()
+
+if not packages.inventory.isInventory(crafterOutputInventory) then
     error("Given name is not an actual inventory")
 end
 
@@ -99,13 +107,13 @@ while true do
                     while true do
                         sleep(1)
 
-                        if packages.inventory.findItem(crafterInputInventory, output.name) then
+                        if packages.inventory.findItem(crafterOutputInventory, output.name) then
                             break
                         end
                     end
 
                     -- Move it to the storage
-                    packages.inventory.moveItems(crafterInputInventory, inventory, output.name)
+                    packages.inventory.moveItems(crafterOutputInventory, inventory, output.name)
 
                     -- Append suffix
                     if craftedSuffix == "" then
@@ -123,7 +131,12 @@ while true do
         end
 
         -- Move crafted thing to the storage
-        packages.inventory.moveItems(crafterInputInventory, inventory, name)
+        packages.inventory.moveItems(crafterOutputInventory, inventory, name)
+
+        -- Print crafting time
+        local craftingTime = math.ceil((os.epoch("utc") - craftStartTime) / 10) / 100
+
+        print("Craft finished in " .. craftingTime .. " sec")
     else
         print("Couldn't find possible craft")
     end
