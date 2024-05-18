@@ -1,6 +1,6 @@
 local function info()
     return {
-        version = 11
+        version = 12
     }
 end
 
@@ -51,116 +51,48 @@ local function craft(params)
     }
 end
 
--- List all known recipes
-local function recipes()
-    return {
-        -- Planks
-        craft({
-            recipe = {
-                { name = "minecraft:spruce_log", count = 1 }
-            },
-            result = {
-                name  = "minecraft:spruce_planks",
-                count = 4
-            }
-        }),
+-- List all recipes from the given folders
+-- If none given, searches through the "recipes" and "disk/recipes"
+local function recipes(folders)
+    local recipes = {}
 
-        -- Slabs
-        craft({
-            recipe = {
-                { name = "minecraft:spruce_planks", count = 1 },
-                { name = "minecraft:spruce_planks", count = 1 },
-                { name = "minecraft:spruce_planks", count = 1 }
-            },
-            result = {
-                name  = "minecraft:spruce_slab",
-                count = 6
-            }
-        }),
+    if not folders then
+        folders = { "recipes", "disk/recipes" }
+    end
 
-        -- Chest
-        craft({
-            recipe = {
-                { name = "minecraft:spruce_planks", count = 1 },
-                { name = "minecraft:spruce_planks", count = 1 },
-                { name = "minecraft:spruce_planks", count = 1 },
-                { name = "minecraft:spruce_planks", count = 1 },
-                nil,
-                { name = "minecraft:spruce_planks", count = 1 },
-                { name = "minecraft:spruce_planks", count = 1 },
-                { name = "minecraft:spruce_planks", count = 1 },
-                { name = "minecraft:spruce_planks", count = 1 }
-            },
-            result = {
-                name  = "minecraft:chest",
-                count = 1
-            }
-        }),
+    if type(folders) ~= "table" then
+        folders = { folders }
+    end
 
-        -- Barrel
-        craft({
-            recipe = {
-                { name = "minecraft:spruce_planks", count = 1 },
-                { name = "minecraft:spruce_slab", count = 1 },
-                { name = "minecraft:spruce_planks", count = 1 },
-                { name = "minecraft:spruce_planks", count = 1 },
-                nil,
-                { name = "minecraft:spruce_planks", count = 1 },
-                { name = "minecraft:spruce_planks", count = 1 },
-                { name = "minecraft:spruce_slab", count = 1 },
-                { name = "minecraft:spruce_planks", count = 1 }
-            },
-            result = {
-                name  = "minecraft:barrel",
-                count = 1
-            }
-        }),
+    for _, folder in pairs(folders) do
+        for _, path in fs.find(folder .. "/*.lua") do
+            local file_recipes = loadfile(path)
 
-        -- Drawer
-        craft({
-            recipe = {
-                { name = "minecraft:spruce_log", count = 1 },
-                { name = "minecraft:spruce_planks", count = 1 },
-                { name = "minecraft:spruce_log", count = 1 },
-                { name = "minecraft:spruce_planks", count = 1 },
-                { name = "minecraft:chest", count = 1 },
-                { name = "minecraft:spruce_planks", count = 1 },
-                { name = "minecraft:spruce_log", count = 1 },
-                { name = "minecraft:spruce_planks", count = 1 },
-                { name = "minecraft:spruce_log", count = 1 }
-            },
-            result = {
-                name  = "extended_drawers:drawer",
-                count = 1
-            }
-        }),
+            if type(file_recipes) == "function" then
+                file_recipes = file_recipes({
+                    info  = info,
+                    craft = craft
+                })
+            end
 
-        -- Quad Drawer
-        craft({
-            recipe = {
-                { name = "minecraft:spruce_log", count = 1 },
-                { name = "minecraft:chest", count = 1 },
-                { name = "minecraft:spruce_log", count = 1 },
-                { name = "minecraft:chest", count = 1 },
-                { name = "minecraft:spruce_planks", count = 1 },
-                { name = "minecraft:chest", count = 1 },
-                { name = "minecraft:spruce_log", count = 1 },
-                { name = "minecraft:chest", count = 1 },
-                { name = "minecraft:spruce_log", count = 1 }
-            },
-            result = {
-                name  = "extended_drawers:quad_drawer",
-                count = 1
-            }
-        })
-    }
+            if type(file_recipes) ~= "table" then
+                error("Wrong recipes format in file [" .. path .. "]. Expected table or function, got " .. type(file_recipes))
+            end
+
+            for _, recipe in pairs(file_recipes) do
+                table.insert(recipes, recipe)
+            end
+        end
+    end
+
+    return recipes
 end
 
 -- Find recipes which produce given item
-local function findRecipes(item)
+local function findRecipes(item, folders)
     local foundRecipes = {}
 
-    for _, recipe in pairs(recipes()) do
+    for _, recipe in pairs(recipes(folders)) do
         for _, output in pairs(recipe.output) do
             if string.find(output.name, item) then
                 table.insert(foundRecipes, {
@@ -176,11 +108,15 @@ local function findRecipes(item)
     return foundRecipes
 end
 
+-- TODO: add recipes crafting optimization
+--       as the last step before returning the final queue
+--       (craft stacks of items instead of one-by-one)
+
 -- Try to find the most optimal recipe execution queue
 -- to craft an item from available resources
-local function findRecipeExecutionQueue(available, item, count)
+local function findRecipeExecutionQueue(available, item, count, folders)
     -- Try to find known recipes for needed item
-    for _, recipe in pairs(findRecipes(item)) do
+    for _, recipe in pairs(findRecipes(item, folders)) do
         local remainingResources = available
 
         local queue = {}
