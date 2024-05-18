@@ -14,7 +14,7 @@ local packages = dofile("require.lua")({
     }
 })
 
-local inventory = "extended_drawers:access_point_0"
+local inventory = "toms_storage:ts.inventory_connector_0"
 
 if not packages.inventory.isInventory(inventory) then
     error("Wrong inventory name")
@@ -135,7 +135,7 @@ while true do
                 end
 
                 local craftingTime = os.epoch("utc") - craftStartTime
-                local craftingEta = math.ceil(#craftQueue * craftingTime / step / 10) / 100
+                local craftingEta = math.ceil((#craftQueue * craftingTime / step - craftingTime) / 10) / 100
 
                 print(prefix .. "Crafted " .. craftedSuffix .. ". ETA: " .. craftingEta .. " sec")
             end
