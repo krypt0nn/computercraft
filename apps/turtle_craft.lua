@@ -12,15 +12,15 @@ if not packages.crafter.isCrafter() then
     error("Not a crafting turtle")
 end
 
-io.write("Rednet modem side: ")
+------------------------------- Settings -------------------------------
 
-local modem = io.read()
+-- Rednet modem interface
+local modem = "left"
 
-io.write("Crafting server ID: ")
+-- Crafting server ID
+local serverId = 0
 
-local serverId = io.read()
-
-print()
+------------------------------- Settings -------------------------------
 
 rednet.open(modem)
 
