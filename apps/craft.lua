@@ -86,16 +86,31 @@ while true do
                         break
                     end
 
-                    -- Wait until the craft is finished
-                    while true do
-                        sleep(1)
+                    local craftedSuffix = ""
 
-                        if packages.inventory.findItem(crafterInputInventory, name) then
-                            break
+                    -- Go through the expected recipe outputs
+                    for _, output in pairs(recipe.output) do
+                        -- Wait until the craft is finished
+                        while true do
+                            sleep(1)
+
+                            if packages.inventory.findItem(crafterInputInventory, output.name) then
+                                break
+                            end
+                        end
+
+                        -- Move it to the storage
+                        packages.inventory.moveItems(crafterInputInventory, inventory, output.name)
+
+                        -- Append suffix
+                        if craftedSuffix == "" then
+                            craftedSuffix = "[" .. output.name .. "] x" .. output.count
+                        else
+                            craftedSuffix = craftedSuffix .. ", [" .. output.name .. "] x" .. output.count
                         end
                     end
 
-                    print(prefix .. "Crafted")
+                    print(prefix .. "Crafted " .. craftedSuffix)
                 end
             end
         end
