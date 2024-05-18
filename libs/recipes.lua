@@ -1,6 +1,6 @@
 local function info()
     return {
-        version = 22
+        version = 23
     }
 end
 
@@ -302,7 +302,7 @@ local function batchRecipeExecutionQueue(queue, name)
                 for _, output in pairs(step.recipe.output) do
                     batchedRecipe.output[output.name].count = batchedRecipe.output[output.name].count + output.count
 
-                    print("[batch] " .. output.name .. " x" .. batchedRecipe.output[output.name].count .. "; repeats = " .. repeats)
+                    print("[batch] " .. output.name .. " x" .. batchedRecipe.output[output.name].count .. "; repeats = " .. repeats .. "; output_count = " .. output.count)
                 end
 
                 for i, resource in pairs(step.recipe.params.recipe) do
