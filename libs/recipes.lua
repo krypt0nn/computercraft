@@ -1,6 +1,6 @@
 local function info()
     return {
-        version = 24
+        version = 25
     }
 end
 
@@ -259,7 +259,11 @@ local function cloneTable(original)
 	local copy = {}
 
 	for key, value in pairs(original) do
-		copy[key] = value
+        if type(value) == "table" then
+            copy[key] = cloneTable(value)
+        else
+            copy[key] = value
+        end
 	end
 
 	return copy
