@@ -1,6 +1,6 @@
 local function info()
     return {
-        version = 6,
+        version = 7,
         rednet = {
             protocol = "adeptus_mechanicus/crafter"
         }
@@ -87,7 +87,7 @@ local function start(serverId)
 
                     -- Return back unneeded resources
                     if unneededResource then
-                        turtle.drop()
+                        turtle.dropUp()
                     end
 
                     -- Check if we've finished
@@ -130,7 +130,7 @@ local function start(serverId)
                 end
 
                 -- Put crafter item to the storage
-                turtle.drop()
+                turtle.dropUp()
 
                 print("[*] crafted [" .. craftedItem.name .. "] x" .. craftedItem.count)
             end
