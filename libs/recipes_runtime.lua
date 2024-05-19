@@ -13,7 +13,7 @@ local packages = dofile("require.lua")({
 
 local function info()
     return {
-        version = 2
+        version = 3
     }
 end
 
@@ -144,6 +144,9 @@ local function executeRecipe(storageInventory, recipe, pool)
     local startTime = os.epoch("utc")
     local recipeResult = {}
 
+    -- Get output inventory state before processing materials
+    local outputInventoryItems = packages.inventory.listItems(executer.output)
+
     -- Process crafting recipe
     if recipe.action == "craft" then
         -- Move all the items to the input storage
@@ -157,54 +160,65 @@ local function executeRecipe(storageInventory, recipe, pool)
             end
         end
 
-        -- Get output inventory state before requesting craft
-        local outputInventoryItems = packages.inventory.listItems(executer.output)
-
         -- Send crafting request to the turtle
         if not packages.crafter.sendRecipe(executer.params.turtleId, recipe) then
             error("Couldn't request recipe crafting")
         end
 
-        -- Go through the expected recipe outputs
-        for _, output in pairs(recipe.output) do
-            -- Wait until the craft is finished
-            while true do
-                sleep(1)
-
-                local foundItem = packages.inventory.findItem(executer.output, output.name)
-
-                -- If we have found the item and it either
-                -- wasn't presented in the output inventory before crafting
-                -- or its value is different now
-                -- 
-                -- This is needed because we can't move some craft results to the
-                -- output (global storage) inventory
-                if foundItem ~= nil and (not outputInventoryItems[foundItem.name] or foundItem.count > outputInventoryItems[foundItem.name].count) then
-                    break
-                end
-            end
-
-            -- Move it to the storage
-            local moved = packages.inventory.moveItems(executer.output, storageInventory, output.name)
-
-            if not moved then
-                error("Couldn't store crafted [" .. output.name .. "]. Expected " .. output.count .. ", got none")
-            elseif moved < output.count then
-                error("Couldn't store crafted [" .. output.name .. "]. Expected " .. output.count .. ", got " .. moved)
-            end
-
-            -- Add crafted item to the function output
-            table.insert(recipeResult, {
-                name  = output.name,
-                count = output.count
-            })
-        end
-
     -- Process "process" recipe
     elseif recipe.action == "process" then
-        error("Process recipes are not supported yet")
+        -- Move all the items to the input storage
+        for _, input in pairs(recipe.params.expected_input) do
+            local moved = packages.inventory.moveItems(storageInventory, executer.input, input.name, input.count)
+
+            if not moved then
+                error("Couldn't transfer [" .. input.name .. "]. Expected " .. input.count .. ", got none")
+            elseif moved < input.count then
+                error("Couldn't transfer [" .. input.name .. "]. Expected " .. input.count .. ", got " .. moved)
+            end
+        end
+
+        -- We don't need to do anything else, script
+        -- will look into the output storage and await
+        -- expected resources there
     end
 
+    -- Go through the expected recipe outputs
+    for _, output in pairs(recipe.output) do
+        -- Wait until the craft is finished
+        while true do
+            sleep(1)
+
+            local foundItem = packages.inventory.findItem(executer.output, output.name)
+
+            -- If we have found the item and it either
+            -- wasn't presented in the output inventory before crafting
+            -- or its value is different now
+            -- 
+            -- This is needed because we can't move some craft results to the
+            -- output (global storage) inventory
+            if foundItem ~= nil and (not outputInventoryItems[foundItem.name] or foundItem.count > outputInventoryItems[foundItem.name].count) then
+                break
+            end
+        end
+
+        -- Move it to the storage
+        local moved = packages.inventory.moveItems(executer.output, storageInventory, output.name)
+
+        if not moved then
+            error("Couldn't store crafted [" .. output.name .. "]. Expected " .. output.count .. ", got none")
+        elseif moved < output.count then
+            error("Couldn't store crafted [" .. output.name .. "]. Expected " .. output.count .. ", got " .. moved)
+        end
+
+        -- Add crafted item to the function output
+        table.insert(recipeResult, {
+            name  = output.name,
+            count = output.count
+        })
+    end
+
+    -- Return execution result
     local finishTime = os.epoch("utc")
 
     return {
