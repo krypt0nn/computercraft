@@ -13,24 +13,28 @@ local packages = dofile("require.lua")({
 
 local function info()
     return {
-        version = 1
+        version = 2
     }
 end
 
 -- Convert recipe type to the executer role
 local function taskToRole(task)
-    return {
+    local roles = {
         craft   = "crafter",
         process = "processer"
-    }[task]
+    }
+
+    return roles[task]
 end
 
 -- Convert executer role to the recipe type
 local function roleToTask(role)
-    return {
+    local tasks = {
         crafter   = "craft",
         processer = "process"
-    }[task]
+    }
+
+    return tasks[role]
 end
 
 -- Create an executer of the "craft" recipe types
