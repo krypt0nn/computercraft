@@ -1,6 +1,6 @@
 local function info()
     return {
-        version = 28
+        version = 29
     }
 end
 
@@ -59,6 +59,7 @@ end
 -- Mostly needed for mods integration
 -- 
 -- local iron_plates = process({
+--     name = "compressor",
 --     input = {
 --         { name = "minecraft:iron_ingot", count = 1 }
 --     },
@@ -67,6 +68,10 @@ end
 --     }
 -- })
 local function process(params)
+    if not params.name then
+        error("Incorrect params format: no machine name provided")
+    end
+
     if type(params.input) ~= "table" then
         error("Incorrect params format: no input provided")
     end
@@ -111,8 +116,9 @@ local function process(params)
         input  = input,
         output = output,
         params = {
-            expected_input  = params.input,
-            expected_output = params.output
+            name   = params.name,
+            input  = params.input,
+            output = params.output
         }
     }
 end
