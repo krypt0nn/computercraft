@@ -30,8 +30,8 @@ local pool = packages.recipes_runtime.pool({
     -- Crafter
     packages.recipes_runtime.crafter(
         1,
-        "minecraft:barrel_9",
-        "minecraft:barrel_10"
+        "minecraft:barrel_17",
+        "minecraft:barrel_18"
     ),
 
     -- Furnace
@@ -60,6 +60,20 @@ local pool = packages.recipes_runtime.pool({
         "wiremill",
         "minecraft:barrel_11",
         "minecraft:barrel_12"
+    ),
+
+    -- Cutting Machine
+    packages.recipes_runtime.processer(
+        "cutting_machine",
+        "minecraft:barrel_13",
+        "minecraft:barrel_14"
+    ),
+
+    -- Mixer
+    packages.recipes_runtime.processer(
+        "mixer",
+        "minecraft:barrel_15",
+        "minecraft:barrel_16"
     )
 })
 
