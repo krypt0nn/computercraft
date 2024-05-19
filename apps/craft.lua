@@ -9,12 +9,12 @@ local packages = dofile("require.lua")({
             minimalVersion = 27
         },
         recipes_runtime = {
-            minimalVersion = 1
+            minimalVersion = 2
         }
     }
 })
 
-------------------------------- Settings -------------------------------
+--------------------- Settings ---------------------
 
 -- Rednet modem interface
 local modem = "top"
@@ -30,7 +30,7 @@ local pool = packages.recipes_runtime.pool({
     packages.recipes_runtime.crafter(1, "minecraft:barrel_1", "minecraft:barrel_2")
 })
 
-------------------------------- Settings -------------------------------
+--------------------- Settings ---------------------
 
 if not packages.inventory.isInventory(storageInventory) then
     error("Wrong main storage inventory name")
