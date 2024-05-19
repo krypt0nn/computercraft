@@ -13,7 +13,7 @@ local packages = dofile("require.lua")({
 
 local function info()
     return {
-        version = 3
+        version = 4
     }
 end
 
@@ -58,7 +58,7 @@ local function crafter(turtleId, inputInventory, outputInventory)
 end
 
 -- Create an executer of the "process" recipe types
-local function processer(inputInventory, outputInventory)
+local function processer(name, inputInventory, outputInventory)
     if not packages.inventory.isInventory(inputInventory) then
         error("Can't register processer: wrong input inventory: [" .. inputInventory .. "]")
     end
@@ -70,7 +70,10 @@ local function processer(inputInventory, outputInventory)
     return {
         role   = "processer",
         input  = inputInventory,
-        output = outputInventory
+        output = outputInventory,
+        params = {
+            name = name
+        }
     }
 end
 
@@ -113,14 +116,30 @@ local function getRecipeExecuter(recipe, pool)
         return nil
     end
 
-    -- Shouldn't be possible but just in case
-    if not pool[recipe.action][1] then
-        return nil
+    -- Processers have names which we must respect separately
+    if recipe.action == "process" then
+        -- Go through the list of processers
+        for _, executer in pairs(pool[recipe.action]) do
+            -- Check if its name is what we need
+            if executer.params.name == recipe.params.name then
+                -- Return it if true
+                return executer
+            end
+        end
+
+    -- Otherwise just find it in the pool
+    else
+        -- Shouldn't be possible but just in case
+        if not pool[recipe.action][1] then
+            return nil
+        end
+
+        -- For now just return the first available executers
+        -- Scheduler will be (possibly) added in a future
+        return pool[recipe.action][1]
     end
 
-    -- For now just return the first available executers
-    -- Scheduler will be (possibly) added in a future
-    return pool[recipe.action][1]
+    return nil
 end
 
 -- Execute given recipe using executers pool and input storage inventory
@@ -168,7 +187,7 @@ local function executeRecipe(storageInventory, recipe, pool)
     -- Process "process" recipe
     elseif recipe.action == "process" then
         -- Move all the items to the input storage
-        for _, input in pairs(recipe.params.expected_input) do
+        for _, input in pairs(recipe.params.input) do
             local moved = packages.inventory.moveItems(storageInventory, executer.input, input.name, input.count)
 
             if not moved then
