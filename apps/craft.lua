@@ -53,6 +53,13 @@ local pool = packages.recipes_runtime.pool({
         "compressor",
         "minecraft:barrel_7",
         "minecraft:barrel_8"
+    ),
+
+    -- Wiremill
+    packages.recipes_runtime.processer(
+        "wiremill",
+        "minecraft:barrel_11",
+        "minecraft:barrel_12"
     )
 })
 
