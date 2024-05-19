@@ -132,6 +132,7 @@ while true do
             prefix = prefix .. "[ETA: " .. craftingEta .. " sec]"
 
             print(prefix .. " Crafted " .. recipeResult)
+            print()
         end
 
         -- Print crafting time
