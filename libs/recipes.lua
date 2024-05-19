@@ -1,6 +1,6 @@
 local function info()
     return {
-        version = 32
+        version = 33
     }
 end
 
@@ -404,6 +404,8 @@ local function batchRecipe(recipe, original)
     else
         error("Can't batch recipe: unsupported recipe action: " .. recipe.action)
     end
+
+    return recipe
 end
 
 -- Batch-optimize found crafting queue around given output name
