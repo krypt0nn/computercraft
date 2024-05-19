@@ -13,7 +13,7 @@ local packages = dofile("require.lua")({
 
 local function info()
     return {
-        version = 4
+        version = 5
     }
 end
 
@@ -208,16 +208,21 @@ local function executeRecipe(storageInventory, recipe, pool)
         while true do
             sleep(1)
 
+            -- Find required item in the output inventory
             local foundItem = packages.inventory.findItem(executer.output, output.name)
 
-            -- If we have found the item and it either
-            -- wasn't presented in the output inventory before crafting
-            -- or its value is different now
-            -- 
-            -- This is needed because we can't move some craft results to the
-            -- output (global storage) inventory
-            if foundItem ~= nil and (not outputInventoryItems[foundItem.name] or foundItem.count > outputInventoryItems[foundItem.name].count) then
-                break
+            -- If we found it
+            if foundItem then
+                -- Get previous items in the output storage
+                local previousItem = outputInventoryItems[foundItem.name] or {
+                    name  = foundItem.name,
+                    count = 0
+                }
+
+                -- Check if we got just what we needed
+                if foundItem.count - previousItem.count >= output.count then
+                    break
+                end
             end
         end
 
