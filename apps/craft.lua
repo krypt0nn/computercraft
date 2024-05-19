@@ -172,7 +172,7 @@ while true do
                 end
 
                 for _, hint in pairs(hints) do
-                    print("- Add [" .. hint.name .. "] x" .. hint.count)
+                    print(prefix .. "- Add [" .. hint.name .. "] x" .. hint.count)
 
                     if hint.subhint then
                         printHints(hint.subhint, "  " .. prefix)
