@@ -1,6 +1,6 @@
 local function info()
     return {
-        version = 31
+        version = 32
     }
 end
 
@@ -363,6 +363,11 @@ local function canBatchRecipe(recipe, original)
         if recipe.output[output.name].count + output.count > 64 then
             return false
         end
+    end
+
+    -- Verify that processing machine is the same
+    if recipe.action == "process" and recipe.params.name ~= original.params.name then
+        return false
     end
 
     return true
