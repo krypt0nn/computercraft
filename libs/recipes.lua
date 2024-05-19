@@ -1,6 +1,6 @@
 local function info()
     return {
-        version = 29
+        version = 30
     }
 end
 
@@ -142,8 +142,9 @@ local function recipes(folders)
 
             if type(file_recipes) == "function" then
                 file_recipes = file_recipes({
-                    info  = info,
-                    craft = craft
+                    info    = info,
+                    craft   = craft,
+                    process = process
                 })
             end
 
