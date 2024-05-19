@@ -1,6 +1,6 @@
 local function info()
     return {
-        version = 15
+        version = 16
     }
 end
 
@@ -52,7 +52,8 @@ local function listItems(name)
             local title = item.name
 
             if inventoryType == "drawer" then
-                title = item.displayName
+                -- Sometimes title is nil?
+                title = item.displayName or item.name
             end
 
             local value = items[item.name] or {
@@ -90,7 +91,7 @@ local function findItem(inventory, name)
     end
 
     for _, item in pairs(items) do
-        if string.find(item.name, name) or string.find(item.title, name) then
+        if string.find(item.name or "", name) or string.find(item.title or "", name) then
             return item
         end
     end
