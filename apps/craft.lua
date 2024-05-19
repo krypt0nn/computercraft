@@ -6,7 +6,7 @@ local packages = dofile("require.lua")({
             minimalVersion = 16
         },
         recipes = {
-            minimalVersion = 29
+            minimalVersion = 30
         },
         recipes_runtime = {
             minimalVersion = 4
