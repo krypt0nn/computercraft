@@ -1,6 +1,6 @@
 local function info()
     return {
-        version = 33
+        version = 34
     }
 end
 
@@ -220,7 +220,7 @@ local function findRecipeExecutionQueue(available, item, count, folders)
                 -- If we need to craft anything
                 if craft > 0 then
                     -- Prepare needed resources crafting queue
-                    local inputCraftQueue = findRecipeExecutionQueue(remainingResources, input.name, craft)
+                    local inputCraftQueue, inputCraftHint = findRecipeExecutionQueue(remainingResources, input.name, craft)
 
                     -- Stop search if it's not available
                     if not inputCraftQueue then
@@ -228,8 +228,9 @@ local function findRecipeExecutionQueue(available, item, count, folders)
 
                         -- Put required item to the hints
                         table.insert(recipeHints, {
-                            name  = input.name,
-                            count = craft
+                            name    = input.name,
+                            count   = craft,
+                            subhint = inputCraftHint
                         })
 
                         break
