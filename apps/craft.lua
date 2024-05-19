@@ -3,7 +3,7 @@ local packages = dofile("require.lua")({
     cache = "cache",
     packages = {
         inventory = {
-            minimalVersion = 15
+            minimalVersion = 16
         },
         recipes = {
             minimalVersion = 27
