@@ -6,10 +6,10 @@ local packages = dofile("require.lua")({
             minimalVersion = 16
         },
         recipes = {
-            minimalVersion = 27
+            minimalVersion = 29
         },
         recipes_runtime = {
-            minimalVersion = 3
+            minimalVersion = 4
         }
     }
 })
@@ -27,7 +27,33 @@ local optimizeRecipes = true
 
 -- Register recipes executers pool
 local pool = packages.recipes_runtime.pool({
-    packages.recipes_runtime.crafter(1, "minecraft:barrel_1", "minecraft:barrel_2")
+    -- Crafter
+    packages.recipes_runtime.crafter(
+        1,
+        "minecraft:barrel_1",
+        "minecraft:barrel_2"
+    ),
+
+    -- Furnace
+    packages.recipes_runtime.processer(
+        "furnace",
+        "minecraft:barrel_3",
+        "minecraft:barrel_4"
+    ),
+
+    -- Macerator
+    packages.recipes_runtime.processer(
+        "macerator",
+        "minecraft:barrel_5",
+        "minecraft:barrel_6"
+    ),
+
+    -- Compressor
+    packages.recipes_runtime.processer(
+        "compressor",
+        "minecraft:barrel_7",
+        "minecraft:barrel_8"
+    )
 })
 
 --------------------- Settings ---------------------
