@@ -92,9 +92,9 @@ while true do
 
             for _, result in pairs(result.result) do
                 if recipeResult == "" then
-                    recipeResult = "[" .. result.name "] x" .. result.count
+                    recipeResult = "[" .. result.name .. "] x" .. result.count
                 else
-                    recipeResult = recipeResult .. ", [" .. result.name "] x" .. result.count
+                    recipeResult = recipeResult .. ", [" .. result.name .. "] x" .. result.count
                 end
             end
 
