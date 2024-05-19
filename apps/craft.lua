@@ -70,14 +70,14 @@ while true do
         local craftStartTime = os.epoch("utc")
 
         for step, recipe in pairs(craftQueue) do
-            local prefix = "[" .. math.floor(step / #craftQueue * 100) .. "%] "
+            local prefix = "[" .. math.floor(step / #craftQueue * 100) .. "%]"
 
             -- Execute recipe
             local result, reason = packages.recipes_runtime.executeRecipe(storageInventory, recipe, pool)
 
             -- Stop execution if failed
             if not result then
-                print(prefix .. "Couldn't execute recipe: " .. reason)
+                print(prefix .. " Couldn't execute recipe: " .. reason)
 
                 break
             end
@@ -85,7 +85,7 @@ while true do
             -- Add recipe execution time to the prefix
             local recipeTime = math.ceil(result.time.duration / 10) / 100
 
-            prefix = prefix .. "[" .. recipeTime .. " sec] "
+            prefix = prefix .. "[" .. recipeTime .. " sec]"
 
             -- List recipe result
             local recipeResult = ""
@@ -102,7 +102,10 @@ while true do
             local craftingTime = os.epoch("utc") - craftStartTime
             local craftingEta = math.ceil((#craftQueue * craftingTime / step - craftingTime) / 10) / 100
 
-            print(prefix .. "Crafted " .. recipeResult .. ". ETA: " .. craftingEta .. " sec")
+            -- Add ETA to the prefix
+            prefix = prefix .. "[ETA: " .. craftingEta .. " sec]"
+
+            print(prefix .. " Crafted " .. recipeResult)
         end
 
         -- Print crafting time
