@@ -30,8 +30,8 @@ local pool = packages.recipes_runtime.pool({
     -- Crafter
     packages.recipes_runtime.crafter(
         1,
-        "minecraft:barrel_1",
-        "minecraft:barrel_2"
+        "minecraft:barrel_9",
+        "minecraft:barrel_10"
     ),
 
     -- Furnace
