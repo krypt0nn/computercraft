@@ -1,6 +1,6 @@
 local function info()
     return {
-        version = 1
+        version = 2
     }
 end
 
@@ -42,7 +42,7 @@ local Widget = {
 }
 
 -- Create new widget
-local function Widget:new(parent)
+function Widget:new(parent)
     local widget = {
         parent = parent
     }
@@ -53,7 +53,7 @@ local function Widget:new(parent)
 end
 
 -- Get widget's monitor
-local function Widget:getMonitor()
+function Widget:getMonitor()
     -- If no parent given - try to find a monitor and use it
     if self.parent == nil then
         local monitor = peripheral.find("monitor")
@@ -85,7 +85,7 @@ local function Widget:getMonitor()
 end
 
 -- Get widget size, respecting its margin
-local function Widget:getSize()
+function Widget:getSize()
     local width, height, x, y
 
     -- If no parent given - try to find a monitor and use it
@@ -136,7 +136,7 @@ local function Widget:getSize()
 end
 
 -- Get size of the widget's content space
-local function Widget:getContentSize()
+function Widget:getContentSize()
     local width, height, x, y = self:getSize()
 
     width  = width  - self.padding.left - self.padding.right
@@ -148,7 +148,7 @@ local function Widget:getContentSize()
     return math.max(width, 0), math.max(height, 0), x, y
 end
 
-local function Widget:fill(backgroundColor)
+function Widget:fill(backgroundColor)
     local width, height, x, y = self:getSize()
     local monitor = self:getMonitor()
 
