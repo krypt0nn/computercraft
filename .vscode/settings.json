@@ -11,6 +11,7 @@
         "apps/craft",
         "lib/crafter",
         "apps/turtle_craft",
-        "lib/recipes_runtime"
+        "lib/recipes_runtime",
+        "lib/ui/uilib"
     ]
 }
