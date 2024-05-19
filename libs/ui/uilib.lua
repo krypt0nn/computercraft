@@ -1,6 +1,6 @@
 local function info()
     return {
-        version = 2
+        version = 3
     }
 end
 
@@ -15,6 +15,15 @@ local function isMonitor(name)
     end
 
     return monitor.getSize and monitor.setCursorPos and monitor.blit
+end
+
+local function fillRectangle(x, y, w, h, color, monitor)
+    monitor.setBackgroundColor(color)
+
+    for i = y, y + h do
+        monitor.setCursorPos(x, i)
+        monitor.write(string.rep(" ", w))
+    end
 end
 
 -- Default widget params
@@ -208,15 +217,6 @@ function Widget:fill(backgroundColor)
         fillRectangle(x, y + radius, width, height - radius * 2, backgroundColor, monitor)
     else
         fillRectangle(x, y, width, height, backgroundColor, monitor)
-    end
-end
-
-local function fillRectangle(x, y, w, h, color, monitor)
-    monitor.setBackgroundColor(color)
-
-    for i = y, y + h do
-        monitor.setCursorPos(x, i)
-        monitor.write(string.rep(" ", w))
     end
 end
 
