@@ -1,6 +1,6 @@
 local function info()
     return {
-        version = 5
+        version = 6
     }
 end
 
@@ -203,7 +203,7 @@ function Widget:fill(backgroundColor)
         local circle_x = sizes.x + rounding.horizontal
         local circle_y = sizes.y + rounding.vertical
 
-        for angle = 90, 180, resolution do
+        for angle = 90, 180, rounding.resolution do
             local curve_x = circle_x - rounding.horizontal * math.cos(math.rad(angle))
             local curve_y = circle_y - rounding.vertical * math.cos(math.rad(angle))
 
@@ -214,7 +214,7 @@ function Widget:fill(backgroundColor)
         local circle_x = sizes.x + sizes.width - rounding.horizontal
         local circle_y = sizes.y + rounding.vertical
 
-        for angle = 0, 90, resolution do
+        for angle = 0, 90, rounding.resolution do
             local curve_x = circle_x - rounding.horizontal * math.cos(math.rad(angle))
             local curve_y = circle_y - rounding.vertical * math.cos(math.rad(angle))
 
@@ -225,7 +225,7 @@ function Widget:fill(backgroundColor)
         local circle_x = sizes.x + rounding.horizontal
         local circle_y = sizes.y + sizes.height - rounding.vertical
 
-        for angle = 180, 270, resolution do
+        for angle = 180, 270, rounding.resolution do
             local curve_x = circle_x - rounding.horizontal * math.cos(math.rad(angle))
             local curve_y = circle_y - rounding.vertical * math.cos(math.rad(angle))
 
@@ -236,7 +236,7 @@ function Widget:fill(backgroundColor)
         local circle_x = sizes.x + sizes.width  - rounding.horizontal
         local circle_y = sizes.y + sizes.height - rounding.vertical
 
-        for angle = 270, 360, resolution do
+        for angle = 270, 360, rounding.resolution do
             local curve_x = circle_x - rounding.horizontal * math.cos(math.rad(angle))
             local curve_y = circle_y - rounding.vertical * math.cos(math.rad(angle))
 
