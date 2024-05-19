@@ -1,6 +1,6 @@
 local function info()
     return {
-        version = 27
+        version = 28
     }
 end
 
@@ -16,8 +16,12 @@ end
 --     }
 -- })
 local function craft(params)
-    if not params.recipe then
+    if type(params.recipe) ~= "table" then
         error("Incorrect params format: no recipe provided")
+    end
+
+    if type(params.result) ~= "table" then
+        error("Incorrect params format: no result provided")
     end
 
     local input  = {}
@@ -47,6 +51,68 @@ local function craft(params)
         output = output,
         params = {
             recipe = params.recipe
+        }
+    }
+end
+
+-- Prepare processing recipe
+-- Mostly needed for mods integration
+-- 
+-- local iron_plates = process({
+--     input = {
+--         { name = "minecraft:iron_ingot", count = 1 }
+--     },
+--     output = {
+--         { name = "modern_industrialization:iron_plate", count = 1 }
+--     }
+-- })
+local function process(params)
+    if type(params.input) ~= "table" then
+        error("Incorrect params format: no input provided")
+    end
+
+    if type(params.output) ~= "table" then
+        error("Incorrect params format: no output provided")
+    end
+
+    local input  = {}
+    local output = {}
+
+    -- Prepare input
+    for _, item in pairs(params.input) do
+        if item.name and item.count then
+            value = input[item.name] or {
+                name  = item.name,
+                count = 0
+            }
+
+            value.count = value.count + item.count
+
+            input[item.name] = value
+        end
+    end
+
+    -- Prepare output
+    for _, item in pairs(params.output) do
+        if item.name and item.count then
+            value = output[item.name] or {
+                name  = item.name,
+                count = 0
+            }
+
+            value.count = value.count + item.count
+
+            output[item.name] = value
+        end
+    end
+
+    return {
+        action = "process",
+        input  = input,
+        output = output,
+        params = {
+            expected_input  = params.input,
+            expected_output = params.output
         }
     }
 end
