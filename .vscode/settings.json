@@ -10,6 +10,7 @@
         "lib/json",
         "apps/craft",
         "lib/crafter",
-        "apps/turtle_craft"
+        "apps/turtle_craft",
+        "lib/recipes_runtime"
     ]
 }
