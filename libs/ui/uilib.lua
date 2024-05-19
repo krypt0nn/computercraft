@@ -1,6 +1,6 @@
 local function info()
     return {
-        version = 3
+        version = 4
     }
 end
 
@@ -141,82 +141,115 @@ function Widget:getSize()
     x = x + self.margin.left
     y = y + self.margin.top
 
-    return math.max(width, 0), math.max(height, 0), x, y
+    return {
+        x = x,
+        y = y,
+        width = math.max(width, 0),
+        height = math.max(height, 0)
+    }
 end
 
 -- Get size of the widget's content space
 function Widget:getContentSize()
-    local width, height, x, y = self:getSize()
+    local sizes = self:getSize()
 
-    width  = width  - self.padding.left - self.padding.right
-    height = height - self.padding.top  - self.padding.bottom
+    local width  = sizes.width  - self.padding.left - self.padding.right
+    local height = sizes.height - self.padding.top  - self.padding.bottom
 
-    x = x + self.padding.left
-    y = y + self.padding.top
+    local x = sizes.x + self.padding.left
+    local y = sizes.y + self.padding.top
 
-    return math.max(width, 0), math.max(height, 0), x, y
+    return {
+        x = x,
+        y = y,
+        width = math.max(width, 0),
+        height = math.max(height, 0)
+    }
+end
+
+-- Get widget rounding
+function Widget:getRounding()
+    if type(self.rounding.radius) == "number" then
+        return {
+            vertical = self.rounding.radius,
+            horizontal = math.floor(self.rounding.radius * 1.5 + 0.5),
+            resolution = self.rounding.resolution or 15
+        }
+
+    elseif type(self.rounding.radius) == "table" then
+        return {
+            vertical = self.rounding.radius.vertical or 0,
+            horizontal = self.rounding.radius.horizontal or 0,
+            resolution = self.rounding.resolution or 15
+        }
+
+    else
+        return {
+            vertical = 0,
+            horizontal = 0,
+            resolution = 15
+        }
+    end
 end
 
 function Widget:fill(backgroundColor)
-    local width, height, x, y = self:getSize()
-    local monitor = self:getMonitor()
-
-    local radius     = self.rounding.radius or 0
-    local resolution = self.rounding.resolution or 15
+    local sizes    = self:getSize()
+    local monitor  = self:getMonitor()
+    local rounding = self:getRounding()
 
     -- Rounding
-    if radius > 0 then
+    if rounding.vertical > 0 or rounding.horizontal > 0 then
         -- Left top corner
-        local circle_x = x + radius
-        local circle_y = y + radius
+        local circle_x = sizes.x + sizes.horizontal
+        local circle_y = sizes.y + sizes.vertical
 
         for angle = 90, 180, resolution do
-            local curve_x = circle_x - radius * math.cos(math.rad(angle))
-            local curve_y = circle_y - radius * math.cos(math.rad(angle))
+            local curve_x = circle_x - sizes.horizontal * math.cos(math.rad(angle))
+            local curve_y = circle_y - sizes.vertical * math.cos(math.rad(angle))
 
             fillRectangle(curve_x, curve_y, circle_x - curve_x, 1, backgroundColor, monitor)
         end
 
         -- Right top corner
-        local circle_x = x + width - radius
-        local circle_y = y         + radius
+        local circle_x = sizes.x + sizes.width - sizes.horizontal
+        local circle_y = sizes.y + sizes.vertical
 
         for angle = 0, 90, resolution do
-            local curve_x = circle_x - radius * math.cos(math.rad(angle))
-            local curve_y = circle_y - radius * math.cos(math.rad(angle))
+            local curve_x = circle_x - sizes.horizontal * math.cos(math.rad(angle))
+            local curve_y = circle_y - sizes.vertical * math.cos(math.rad(angle))
 
             fillRectangle(circle_x, curve_y, curve_x - circle_x, 1, backgroundColor, monitor)
         end
 
         -- Left bottom corner
-        local circle_x = x          + radius
-        local circle_y = y + height - radius
+        local circle_x = sizes.x + sizes.horizontal
+        local circle_y = sizes.y + sizes.height - sizes.vertical
 
         for angle = 180, 270, resolution do
-            local curve_x = circle_x - radius * math.cos(math.rad(angle))
-            local curve_y = circle_y - radius * math.cos(math.rad(angle))
+            local curve_x = circle_x - sizes.horizontal * math.cos(math.rad(angle))
+            local curve_y = circle_y - sizes.vertical * math.cos(math.rad(angle))
 
             fillRectangle(curve_x, curve_y, circle_x - curve_x, 1, backgroundColor, monitor)
         end
 
         -- Right bottom corner
-        local circle_x = x + width  - radius
-        local circle_y = y + height - radius
+        local circle_x = sizes.x + sizes.width  - sizes.horizontal
+        local circle_y = sizes.y + sizes.height - sizes.vertical
 
         for angle = 270, 360, resolution do
-            local curve_x = circle_x - radius * math.cos(math.rad(angle))
-            local curve_y = circle_y - radius * math.cos(math.rad(angle))
+            local curve_x = circle_x - sizes.horizontal * math.cos(math.rad(angle))
+            local curve_y = circle_y - sizes.vertical * math.cos(math.rad(angle))
 
             fillRectangle(circle_x, curve_y, curve_x - circle_x, 1, backgroundColor, monitor)
         end
 
         -- Top-bottom fill
-        fillRectangle(x + radius, y, width - radius * 2, height, backgroundColor, monitor)
+        fillRectangle(sizes.x + sizes.horizontal, sizes.y, sizes.width - sizes.horizontal * 2, sizes.height, backgroundColor, monitor)
 
         -- Left-right fill
-        fillRectangle(x, y + radius, width, height - radius * 2, backgroundColor, monitor)
+        fillRectangle(sizes.x, sizes.y + sizes.vertical, sizes.width, sizes.height - sizes.vertical * 2, backgroundColor, monitor)
     else
-        fillRectangle(x, y, width, height, backgroundColor, monitor)
+        fillRectangle(sizes.x, sizes.y, sizes.width, sizes.height, backgroundColor, monitor)
     end
 end
 
