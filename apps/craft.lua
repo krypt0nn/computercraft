@@ -92,7 +92,9 @@ while true do
                 local continueCrafting = true
 
                 for _, input in pairs(recipe.params.recipe) do
-                    if packages.inventory.moveItems(storageInventory, crafterInputInventory, input.name, input.count) < input.count then
+                    local moved = packages.inventory.moveItems(storageInventory, crafterInputInventory, input.name, input.count)
+
+                    if not moved or moved < input.count then
                         print(prefix .. "Couldn't transfer enough resources. Stopping execution")
 
                         continueCrafting = false
