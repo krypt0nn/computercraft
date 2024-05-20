@@ -1,6 +1,6 @@
 local function info()
     return {
-        version = 16
+        version = 17
     }
 end
 
@@ -100,7 +100,7 @@ local function findItem(inventory, name)
 end
 
 -- Move items from one inventory to another
--- Returns number of items moved. Can be lower than "amount"
+-- Returns number of moved items. Can be lower than "amount"
 local function moveItems(from, to, name, amount)
     local fromType = getInventoryType(from)
     local toType = getInventoryType(to)
@@ -140,11 +140,45 @@ local function moveItems(from, to, name, amount)
     end
 end
 
+-- Move all the items from one inventory to another
+-- Returns table of moved items
+local function migrateItems(from, to, ignoreList)
+    local fromItemsList = listItems(from)
+
+    if not fromItemsList then
+        error("Can't list items in inventory " .. from)
+    end
+
+    local movedItems = {}
+
+    for _, item in pairs(fromItemsList) do
+        if not ignoreList[item.name] then
+            local moved = moveItems(from, to, item.name)
+
+            if moved then
+                local value = movedItems[item.name] or {
+                    name     = item.name,
+                    count    = 0,
+                    remained = 0
+                }
+
+                value.count    = value.count + moved
+                value.remained = value.remained + item.count - moved
+
+                movedItems[item.name] = value
+            end
+        end
+    end
+
+    return movedItems
+end
+
 return {
     info = info,
     getInventoryType = getInventoryType,
     isInventory = isInventory,
     listItems = listItems,
     findItem = findItem,
-    moveItems = moveItems
+    moveItems = moveItems,
+    migrateItems = migrateItems
 }
