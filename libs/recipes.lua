@@ -1,6 +1,6 @@
 local function info()
     return {
-        version = 50
+        version = 51
     }
 end
 
@@ -241,23 +241,26 @@ local function buildItemCraftingQueue(item, count, availableResources, recipesFo
             table.insert(craftingQueue, recipesQueue[i])
 
             for _, input in pairs(recipesQueue[i].recipe.input) do
+                -- Real amount of input resources we need to have
+                local multipliedInputCount = recipesQueue[i].multiplier * input.count
+
                 -- Calculate amount of input resource needed to craft
                 local inputCraftNeeded = 0
 
                 -- If none available - craft needed amount
                 if not remainingResources[input.name] then
-                    inputCraftNeeded = input.count
+                    inputCraftNeeded = multipliedInputCount
 
                 -- If more than available needed - craft what's absent
-                elseif input.count > remainingResources[input.name].count then
-                    inputCraftNeeded = input.count - remainingResources[input.name].count
+                elseif multipliedInputCount > remainingResources[input.name].count then
+                    inputCraftNeeded = multipliedInputCount - remainingResources[input.name].count
 
                     remainingResources[input.name].count = 0
 
                 -- Otherwise we have just enough resources so only need
                 -- to decreese their remaining value
                 else
-                    remainingResources[input.name].count = remainingResources[input.name].count - input.count
+                    remainingResources[input.name].count = remainingResources[input.name].count - multipliedInputCount
                 end
 
                 -- If we need to craft anything
@@ -268,7 +271,7 @@ local function buildItemCraftingQueue(item, count, availableResources, recipesFo
                     if not inputRecipes or #inputRecipes == 0 then
                         table.insert(craftingQueue, {
                             name     = input.name,
-                            count    = recipesQueue[i].multiplier * input.count,
+                            count    = multipliedInputCount,
                             subhints = nil
                         })
 
@@ -279,7 +282,7 @@ local function buildItemCraftingQueue(item, count, availableResources, recipesFo
 
                     -- Put recipe on a stack if there's only one
                     if #inputRecipes == 1 then
-                        inputRecipes[1].multiplier = recipesQueue[i].multiplier * math.ceil(input.count / inputRecipes[1].count)
+                        inputRecipes[1].multiplier = math.ceil(multipliedInputCount / inputRecipes[1].count)
 
                         table.insert(recipesQueue, inputRecipes[1])
 
@@ -287,7 +290,7 @@ local function buildItemCraftingQueue(item, count, availableResources, recipesFo
                     else
                         local inputCraftingQueue, inputRecipeHints = buildItemCraftingQueue(
                             input.name,
-                            recipesQueue[i].multiplier * input.count,
+                            multipliedInputCount,
                             remainingResources,
                             recipesFolders
                         )
@@ -296,7 +299,7 @@ local function buildItemCraftingQueue(item, count, availableResources, recipesFo
                         if not inputCraftingQueue then
                             table.insert(hints, {
                                 name     = input.name,
-                                count    = recipesQueue[i].multiplier * input.count,
+                                count    = multipliedInputCount,
                                 subhints = inputRecipeHints
                             })
 
