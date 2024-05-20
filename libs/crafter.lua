@@ -59,18 +59,8 @@ local function start(serverId)
                     turtle.select(16)
                     turtle.suck()
 
-                    local sucketItem = turtle.getItemDetail()
-
-                    -- Wait for input
-                    while not suckedItem do
-                        sleep(1)
-
-                        -- Take an input
-                        turtle.suck()
-
-                        -- Check what did we took from the input inventory
-                        suckedItem = turtle.getItemDetail()
-                    end
+                    -- Check what did we took from the input inventory
+                    local suckedItem = turtle.getItemDetail()
 
                     local unneededResource = true
 
