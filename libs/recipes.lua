@@ -1,6 +1,6 @@
 local function info()
     return {
-        version = 36
+        version = 37
     }
 end
 
@@ -222,7 +222,7 @@ local function exp_buildItemCraftingQueue(item, count, availableItems, recipesFo
 
                 -- Otherwise find input's crafting queue recurrently
                 else
-                    local inputCraftingQueue = buildItemCraftingQueue(input.name, input.count, availableItems, recipesFolders)
+                    local inputCraftingQueue = exp_buildItemCraftingQueue(input.name, input.count, availableItems, recipesFolders)
 
                     -- If couldn't find the queue - panic
                     if not inputCraftingQueue then
