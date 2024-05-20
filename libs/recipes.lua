@@ -1,6 +1,6 @@
 local function info()
     return {
-        version = 48
+        version = 49
     }
 end
 
@@ -389,6 +389,7 @@ local function inlineOptimizer(queue)
 
         while repeats < action.multiplier do
             local batchedRecipe = cloneTable(action.recipe)
+            local localRepeats  = repeats
 
             repeats = repeats + 1
 
@@ -407,6 +408,7 @@ local function inlineOptimizer(queue)
             table.insert(optimizedQueue, {
                 name       = action.name,
                 recipe     = batchedRecipe,
+                count      = action.count * (repeats - localRepeats),
                 multiplier = 1
             })
         end
