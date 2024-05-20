@@ -3,7 +3,7 @@ local packages = dofile("require.lua")({
     cache = "cache",
     packages = {
         inventory = {
-            minimalVersion = 17
+            minimalVersion = 18
         },
         crafter = {
             minimalVersion = 8
