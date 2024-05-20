@@ -1,6 +1,6 @@
 local function info()
     return {
-        version = 38
+        version = 39
     }
 end
 
@@ -207,7 +207,11 @@ local function exp_buildItemCraftingQueue(item, count, availableResources, recip
 
     -- If no recipes found for given item
     if not recipes or #recipes == 0 then
-        error("No recipes found for [" .. item .. "]")
+        return nil, {
+            name    = item,
+            count   = count,
+            subhint = {}
+        }
     end
 
     -- This function will expect its first recipe to be recurrent, but
@@ -232,7 +236,11 @@ local function exp_buildItemCraftingQueue(item, count, availableResources, recip
 
                 -- If no recipes found for given item
                 if not inputRecipes or #inputRecipes == 0 then
-                    error("No recipes found for [" .. input.name .. "]")
+                    return nil, {
+                        name    = input.name,
+                        count   = recipesQueue[i].multiplier * input.count,
+                        subhint = {}
+                    }
                 end
 
                 -- Calculate amount of input resource needed to craft
@@ -258,17 +266,21 @@ local function exp_buildItemCraftingQueue(item, count, availableResources, recip
                 if inputCraftNeeded > 0 then
                     -- Put recipe on a stack if there's only one
                     if #inputRecipes == 1 then
-                        inputRecipes[i].multiplier = recipe.multiplier * math.ceil(input.count / inputRecipes[i].count)
+                        inputRecipes[i].multiplier = recipesQueue[i].multiplier * math.ceil(input.count / inputRecipes[i].count)
 
                         table.insert(recipesQueue, inputRecipes[1])
 
                     -- Otherwise find input's crafting queue recurrently
                     else
-                        local inputCraftingQueue = exp_buildItemCraftingQueue(input.name, input.count, remainingResources, recipesFolders)
+                        local inputCraftingQueue, inputRecipeHint = exp_buildItemCraftingQueue(input.name, input.count, remainingResources, recipesFolders)
 
                         -- If couldn't find the queue - panic
                         if not inputCraftingQueue then
-                            error("No recipes found for [" .. input.name .. "]")
+                            return nil, {
+                                name    = input.name,
+                                count   = recipesQueue[i].multiplier * input.count,
+                                subhint = inputRecipeHint
+                            }
                         end
 
                         for _, craft in pairs(inputCraftingQueue) do
