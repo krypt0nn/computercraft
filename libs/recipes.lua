@@ -1,6 +1,6 @@
 local function info()
     return {
-        version = 47
+        version = 48
     }
 end
 
@@ -322,6 +322,64 @@ local function craftingQueueIsOptimal(queue)
     return true
 end
 
+-- Check if we can add original recipe to given
+local function canBatchRecipe(recipe, original)
+    -- Verify that all the inputs are lower than a full stack
+    for _, input in pairs(original.input) do
+        if recipe.input[input.name].count + input.count > 64 then
+            return false
+        end
+    end
+
+    for _, output in pairs(original.output) do
+        if recipe.output[output.name].count + output.count > 64 then
+            return false
+        end
+    end
+
+    -- Verify that processing machine is the same
+    if recipe.action == "process" and recipe.params.name ~= original.params.name then
+        return false
+    end
+
+    return true
+end
+
+-- Add original recipe to given
+local function batchRecipe(recipe, original)
+    -- Batch standard input and output
+    for _, input in pairs(original.input) do
+        recipe.input[input.name].count = recipe.input[input.name].count + input.count
+    end
+
+    for _, output in pairs(original.output) do
+        recipe.output[output.name].count = recipe.output[output.name].count + output.count
+    end
+
+    -- Batch crafting recipe
+    if recipe.action == "craft" then
+        for i, resource in pairs(original.params.recipe) do
+            recipe.params.recipe[i].count = recipe.params.recipe[i].count + resource.count
+        end
+
+    -- Batch processing inputs and outputs
+    elseif recipe.action == "process" then
+        for i, resource in pairs(original.params.input) do
+            recipe.params.input[i].count = recipe.params.input[i].count + resource.count
+        end
+
+        for i, resource in pairs(original.params.output) do
+            recipe.params.output[i].count = recipe.params.output[i].count + resource.count
+        end
+
+    -- Unsupported action
+    else
+        error("Can't batch recipe: unsupported recipe action: " .. recipe.action)
+    end
+
+    return recipe
+end
+
 -- Run inline optimizer on given crafting queue
 local function inlineOptimizer(queue)
     local optimizedQueue = {}
@@ -433,64 +491,6 @@ local function resolveDependencyTree(tree, name)
     end
 
     return cleanQueue
-end
-
--- Check if we can add original recipe to given
-local function canBatchRecipe(recipe, original)
-    -- Verify that all the inputs are lower than a full stack
-    for _, input in pairs(original.input) do
-        if recipe.input[input.name].count + input.count > 64 then
-            return false
-        end
-    end
-
-    for _, output in pairs(original.output) do
-        if recipe.output[output.name].count + output.count > 64 then
-            return false
-        end
-    end
-
-    -- Verify that processing machine is the same
-    if recipe.action == "process" and recipe.params.name ~= original.params.name then
-        return false
-    end
-
-    return true
-end
-
--- Add original recipe to given
-local function batchRecipe(recipe, original)
-    -- Batch standard input and output
-    for _, input in pairs(original.input) do
-        recipe.input[input.name].count = recipe.input[input.name].count + input.count
-    end
-
-    for _, output in pairs(original.output) do
-        recipe.output[output.name].count = recipe.output[output.name].count + output.count
-    end
-
-    -- Batch crafting recipe
-    if recipe.action == "craft" then
-        for i, resource in pairs(original.params.recipe) do
-            recipe.params.recipe[i].count = recipe.params.recipe[i].count + resource.count
-        end
-
-    -- Batch processing inputs and outputs
-    elseif recipe.action == "process" then
-        for i, resource in pairs(original.params.input) do
-            recipe.params.input[i].count = recipe.params.input[i].count + resource.count
-        end
-
-        for i, resource in pairs(original.params.output) do
-            recipe.params.output[i].count = recipe.params.output[i].count + resource.count
-        end
-
-    -- Unsupported action
-    else
-        error("Can't batch recipe: unsupported recipe action: " .. recipe.action)
-    end
-
-    return recipe
 end
 
 -- TODO: rewrite to work with buildItemCraftingQueue
