@@ -99,7 +99,7 @@ while true do
     print()
     print("[*] Building crafting queue...")
 
-    local craftingQueue, hint = packages.recipes.buildItemCraftingQueue(
+    local craftingQueue, hints = packages.recipes.buildItemCraftingQueue(
         name,
         count,
         packages.inventory.listItems(storageInventory)
@@ -108,18 +108,24 @@ while true do
     if not craftingQueue then
         print("[!] Couldn't build crafting queue")
 
-        if hint then
+        if hints then
             print("    Possible solution:")
 
-            local function printHint(hint, prefix)
-                print(prefix .. "- Add [" .. hint.name .. "] x" .. hint.count)
+            local function printHints(hints, prefix)
+                for i, hint in pairs(hints) do
+                    if i == 1 then
+                        print(prefix .. "- Add [" .. hint.name .. "] x" .. hint.count)
+                    else
+                        print(prefix .. "- ...or add [" .. hint.name .. "] x" .. hint.count)
+                    end
 
-                if hint.subhint then
-                    printHints(hint.subhint, "  " .. prefix)
+                    if hint.subhints then
+                        printHints(hint.subhint, "  " .. prefix)
+                    end
                 end
             end
 
-            printHint(hint, "    ")
+            printHints(hints, "    ")
         end
     else
         print("[*] Built queue with " .. #craftingQueue .. " actions")
