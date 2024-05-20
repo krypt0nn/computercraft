@@ -6,7 +6,7 @@ local packages = dofile("require.lua")({
             minimalVersion = 18
         },
         crafter = {
-            minimalVersion = 8
+            minimalVersion = 9
         }
     }
 })
