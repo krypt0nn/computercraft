@@ -1,6 +1,6 @@
 local function info()
     return {
-        version = 52
+        version = 53
     }
 end
 
@@ -186,13 +186,17 @@ end
 local function findRecipes(item, folders)
     local foundRecipes = {}
 
+    -- If we have a colon in item name - it must be
+    -- a full ID string, so we need to compare them directly
+    local strict = string.find(item, ":")
+
     for _, recipe in pairs(recipes(folders)) do
         for _, output in pairs(recipe.output) do
-            if string.find(output.name, item) then
+            if (strict and output.name == item) or (not strict and string.match(output.name, item)) then
                 table.insert(foundRecipes, {
                     name   = output.name,
-                    recipe = recipe,
-                    count  = output.count
+                    count  = output.count,
+                    recipe = recipe
                 })
 
                 break
