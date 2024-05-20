@@ -1,7 +1,22 @@
 local function info()
     return {
-        version = 37
+        version = 38
     }
+end
+
+-- Clone given table
+local function cloneTable(original)
+	local copy = {}
+
+	for key, value in pairs(original) do
+        if type(value) == "table" then
+            copy[key] = cloneTable(value)
+        else
+            copy[key] = value
+        end
+	end
+
+	return copy
 end
 
 -- Prepare crafting recipe
@@ -187,18 +202,22 @@ local function findRecipes(item, folders)
     return foundRecipes
 end
 
--- TODO: respect count
-local function exp_buildItemCraftingQueue(item, count, availableItems, recipesFolders)
+local function exp_buildItemCraftingQueue(item, count, availableResources, recipesFolders)
     local recipes = findRecipes(item, recipesFolders)
 
     -- If no recipes found for given item
-    if not recipes or recipes == 0 then
+    if not recipes or #recipes == 0 then
         error("No recipes found for [" .. item .. "]")
     end
 
     -- This function will expect its first recipe to be recurrent, but
     -- other recipes will be tried to be executed on a stack
     for _, recipe in pairs(recipes) do
+        local remainingResources = cloneTable(availableResources)
+
+        -- Amount of times we need to execute this recipe
+        recipe.multiplier = math.ceil(count / recipe.count)
+
         local craftingQueue = {}
         local recipesQueue = { recipe }
 
@@ -212,25 +231,49 @@ local function exp_buildItemCraftingQueue(item, count, availableItems, recipesFo
                 local inputRecipes = findRecipes(input.name, recipesFolders)
 
                 -- If no recipes found for given item
-                if not inputRecipes or inputRecipes == 0 then
+                if not inputRecipes or #inputRecipes == 0 then
                     error("No recipes found for [" .. input.name .. "]")
                 end
 
-                -- Put this recipe on a stack
-                if #inputRecipes == 1 then
-                    table.insert(recipesQueue, inputRecipes[1])
+                -- Calculate amount of input resource needed to craft
+                local inputCraftNeeded = 0
 
-                -- Otherwise find input's crafting queue recurrently
+                -- If none available - craft needed amount
+                if not remainingResources[input.name] then
+                    inputCraftNeeded = input.count
+
+                -- If more than available needed - craft what's absent
+                elseif input.count > remainingResources[input.name].count then
+                    inputCraftNeeded = input.count - remainingResources[input.name].count
+
+                    remainingResources[input.name].count = 0
+
+                -- Otherwise we have just enough resources so only need
+                -- to decreese their remaining value
                 else
-                    local inputCraftingQueue = exp_buildItemCraftingQueue(input.name, input.count, availableItems, recipesFolders)
+                    remainingResources[input.name].count = remainingResources[input.name].count - input.count
+                end
 
-                    -- If couldn't find the queue - panic
-                    if not inputCraftingQueue then
-                        error("No recipes found for [" .. input.name .. "]")
-                    end
+                -- If we need to craft anything
+                if inputCraftNeeded > 0 then
+                    -- Put recipe on a stack if there's only one
+                    if #inputRecipes == 1 then
+                        inputRecipes[i].multiplier = recipe.multiplier * math.ceil(input.count / inputRecipes[i].count)
 
-                    for _, craft in pairs(inputCraftingQueue) do
-                        table.insert(craftingQueue, craft)
+                        table.insert(recipesQueue, inputRecipes[1])
+
+                    -- Otherwise find input's crafting queue recurrently
+                    else
+                        local inputCraftingQueue = exp_buildItemCraftingQueue(input.name, input.count, remainingResources, recipesFolders)
+
+                        -- If couldn't find the queue - panic
+                        if not inputCraftingQueue then
+                            error("No recipes found for [" .. input.name .. "]")
+                        end
+
+                        for _, craft in pairs(inputCraftingQueue) do
+                            table.insert(craftingQueue, craft)
+                        end
                     end
                 end
             end
@@ -395,21 +438,6 @@ local function resolveDependencyTree(tree, name)
     end
 
     return cleanQueue
-end
-
--- Clone given table
-local function cloneTable(original)
-	local copy = {}
-
-	for key, value in pairs(original) do
-        if type(value) == "table" then
-            copy[key] = cloneTable(value)
-        else
-            copy[key] = value
-        end
-	end
-
-	return copy
 end
 
 -- Check if we can add original recipe to given
