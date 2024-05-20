@@ -3,7 +3,7 @@ local packages = dofile("require.lua")({
     cache = "cache",
     packages = {
         inventory = {
-            minimalVersion = 16
+            minimalVersion = 17
         },
         crafter = {
             minimalVersion = 8
@@ -13,7 +13,7 @@ local packages = dofile("require.lua")({
 
 local function info()
     return {
-        version = 5
+        version = 6
     }
 end
 
@@ -100,6 +100,26 @@ local function pool(executers)
     end
 
     return pool
+end
+
+-- Clear input and output storages of all the executers
+local function clearStorages(storageInventory, pool)
+    if not packages.inventory.isInventory(storageInventory) then
+        error("Wrong storage inventory: [" .. storageInventory .. "]")
+    end
+
+    local movedItems = {}
+
+    for action, executers in pairs(pool) do
+        for id, executer in pairs(executers) do
+            movedItems[action][id] = {
+                input  = packages.inventory.migrateItems(executer.input, storageInventory),
+                output = packages.inventory.migrateItems(executer.output, storageInventory)
+            }
+        end
+    end
+
+    return movedItems
 end
 
 -- Find recipe executer from the pool
@@ -262,6 +282,7 @@ return {
     crafter = crafter,
     processer = processer,
     pool = pool,
+    clearStorages = clearStorages,
     getRecipeExecuter = getRecipeExecuter,
     executeRecipe = executeRecipe
 }
