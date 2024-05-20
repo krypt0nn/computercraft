@@ -6,7 +6,7 @@ local packages = dofile("require.lua")({
             minimalVersion = 18
         },
         recipes = {
-            minimalVersion = 44
+            minimalVersion = 46
         },
         recipes_runtime = {
             minimalVersion = 7
@@ -122,14 +122,36 @@ while true do
             printHint(hint, "    ")
         end
     else
-        print("[*] Built queue with " .. #craftingQueue .. " steps")
+        print("[*] Built queue with " .. #craftingQueue .. " actions")
 
         if not packages.recipes.craftingQueueIsOptimal(craftingQueue) then
             print("[!] Crafting queue is suboptimal")
-            io.write("[?] Run dependency resolver? (y/N)")
 
-            if io.read() == "y" then
-                print("[!] Dependency Resolver Optimizer is not implemented for this version yet. Skipping...")
+            local function askFor(message, default)
+                io.write("[?] " .. message)
+
+                if default then
+                    io.write(" (Y/n): ")
+                else
+                    io.write(" (y/N): ")
+                end
+
+                local input = string.lower(io.read())
+
+                if default then
+                    return input ~= "n" and input ~= "no"
+                else
+                    return input ~= "y" and input ~= "ye" and input ~= "yes"
+                end
+            end
+
+            -- Ask for inline optimizer
+            if askFor("Run inline optimizer", true) then
+                print("[*] Started inline optimizer...")
+
+                craftingQueue = packages.recipes.inlineOptimizer(craftingQueue)
+
+                print("[*] Done")
             end
         end
 
