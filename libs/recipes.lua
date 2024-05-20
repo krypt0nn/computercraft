@@ -1,6 +1,6 @@
 local function info()
     return {
-        version = 34
+        version = 35
     }
 end
 
@@ -123,9 +123,11 @@ local function process(params)
     }
 end
 
+local recipesCache = {}
+
 -- List all recipes from the given folders
 -- If none given, searches through the "recipes" and "disk/recipes"
-local function recipes(folders)
+local function recipes(folders, cache)
     local recipes = {}
 
     if not folders then
@@ -138,21 +140,25 @@ local function recipes(folders)
 
     for _, folder in pairs(folders) do
         for _, path in pairs(fs.find(folder .. "/*.lua")) do
-            local file_recipes = loadfile(path)()
+            if not recipesCache[path] then
+                local fileRecipes = loadfile(path)()
 
-            if type(file_recipes) == "function" then
-                file_recipes = file_recipes({
-                    info    = info,
-                    craft   = craft,
-                    process = process
-                })
+                if type(fileRecipes) == "function" then
+                    fileRecipes = fileRecipes({
+                        info    = info,
+                        craft   = craft,
+                        process = process
+                    })
+                end
+    
+                if type(fileRecipes) ~= "table" then
+                    error("Wrong recipes format in file [" .. path .. "]. Expected table or function, got " .. type(fileRecipes))
+                end
+
+                recipesCache[path] = fileRecipes
             end
 
-            if type(file_recipes) ~= "table" then
-                error("Wrong recipes format in file [" .. path .. "]. Expected table or function, got " .. type(file_recipes))
-            end
-
-            for _, recipe in pairs(file_recipes) do
+            for _, recipe in pairs(recipesCache[path]) do
                 table.insert(recipes, recipe)
             end
         end
@@ -179,6 +185,61 @@ local function findRecipes(item, folders)
     end
 
     return foundRecipes
+end
+
+-- TODO: respect count
+local function exp_buildItemCraftingQueue(item, count, availableItems, recipesFolders)
+    local recipes = findRecipes(item, recipesFolders)
+
+    -- If no recipes found for given item
+    if not recipes or recipes == 0 then
+        error("No recipes found for [" .. item .. "]")
+    end
+
+    -- This function will expect its first recipe to be recurrent, but
+    -- other recipes will be tried to be executed on a stack
+    for _, recipe in pairs(recipes) do
+        local craftingQueue = {}
+        local recipesQueue = { recipe }
+
+        local i = 1
+
+        -- Iterate over recipes stack
+        while recipesQueue[i] then
+            table.insert(craftingQueue, recipesQueue[i])
+
+            for _, input in pairs(recipesQueue[i].recipe.input) do
+                local inputRecipes = findRecipes(input.name, recipesFolders)
+
+                -- If no recipes found for given item
+                if not inputRecipes or inputRecipes == 0 then
+                    error("No recipes found for [" .. input.name .. "]")
+                end
+
+                -- Put this recipe on a stack
+                if #inputRecipes == 1 then
+                    table.insert(recipesQueue, inputRecipes[1])
+
+                -- Otherwise find input's crafting queue recurrently
+                else
+                    local inputCraftingQueue = buildItemCraftingQueue(input.name, input.count, availableItems, recipesFolders)
+
+                    -- If couldn't find the queue - panic
+                    if not inputCraftingQueue then
+                        error("No recipes found for [" .. input.name .. "]")
+                    end
+
+                    for _, craft in pairs(inputCraftingQueue) do
+                        table.insert(craftingQueue, craft)
+                    end
+                end
+            end
+
+            i = i + 1
+        end
+
+        return craftingQueue
+    end
 end
 
 -- Try to find the most optimal recipe execution queue
@@ -454,6 +515,7 @@ return {
     craft = craft,
     recipes = recipes,
     findRecipes = findRecipes,
+    exp_buildItemCraftingQueue = exp_buildItemCraftingQueue,
     findRecipeExecutionQueue = findRecipeExecutionQueue,
     getQueueDependencyTree = getQueueDependencyTree,
     resolveDependencyTree = resolveDependencyTree,
