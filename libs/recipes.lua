@@ -1,6 +1,6 @@
 local function info()
     return {
-        version = 40
+        version = 41
     }
 end
 
@@ -232,17 +232,6 @@ local function exp_buildItemCraftingQueue(item, count, availableResources, recip
             table.insert(craftingQueue, recipesQueue[i])
 
             for _, input in pairs(recipesQueue[i].recipe.input) do
-                local inputRecipes = findRecipes(input.name, recipesFolders)
-
-                -- If no recipes found for given item
-                if not inputRecipes or #inputRecipes == 0 then
-                    return nil, {
-                        name    = input.name,
-                        count   = recipesQueue[i].multiplier * input.count,
-                        subhint = nil
-                    }
-                end
-
                 -- Calculate amount of input resource needed to craft
                 local inputCraftNeeded = 0
 
@@ -264,6 +253,17 @@ local function exp_buildItemCraftingQueue(item, count, availableResources, recip
 
                 -- If we need to craft anything
                 if inputCraftNeeded > 0 then
+                    local inputRecipes = findRecipes(input.name, recipesFolders)
+
+                    -- If no recipes found for given item
+                    if not inputRecipes or #inputRecipes == 0 then
+                        return nil, {
+                            name    = input.name,
+                            count   = recipesQueue[i].multiplier * input.count,
+                            subhint = nil
+                        }
+                    end
+
                     -- Put recipe on a stack if there's only one
                     if #inputRecipes == 1 then
                         inputRecipes[i].multiplier = recipesQueue[i].multiplier * math.ceil(input.count / inputRecipes[i].count)
