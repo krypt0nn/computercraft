@@ -1,6 +1,6 @@
 local function info()
     return {
-        version = 46
+        version = 47
     }
 end
 
@@ -326,7 +326,7 @@ end
 local function inlineOptimizer(queue)
     local optimizedQueue = {}
 
-    for _, action in queue do
+    for _, action in pairs(queue) do
         local repeats = 0
 
         while repeats < action.multiplier do
