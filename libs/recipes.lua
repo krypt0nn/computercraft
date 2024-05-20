@@ -1,6 +1,6 @@
 local function info()
     return {
-        version = 45
+        version = 46
     }
 end
 
@@ -346,7 +346,11 @@ local function inlineOptimizer(queue)
                 repeats = repeats + 1
             end
 
-            table.insert(optimizedQueue, batchedRecipe)
+            table.insert(optimizedQueue, {
+                name       = action.name,
+                recipe     = batchedRecipe,
+                multiplier = 1
+            })
         end
     end
 
