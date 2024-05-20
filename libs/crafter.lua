@@ -1,6 +1,6 @@
 local function info()
     return {
-        version = 8,
+        version = 9,
         rednet = {
             protocol = "adeptus_mechanicus/crafter"
         }
@@ -59,8 +59,18 @@ local function start(serverId)
                     turtle.select(16)
                     turtle.suck()
 
-                    -- Check what did we took from the input inventory
-                    local suckedItem = turtle.getItemDetail()
+                    local sucketItem = turtle.getItemDetail()
+
+                    -- Wait for input
+                    while not suckedItem do
+                        sleep(1)
+
+                        -- Take an input
+                        turtle.suck()
+
+                        -- Check what did we took from the input inventory
+                        suckedItem = turtle.getItemDetail()
+                    end
 
                     local unneededResource = true
 
