@@ -1,6 +1,6 @@
 local function info()
     return {
-        version = 41
+        version = 42
     }
 end
 
@@ -266,7 +266,7 @@ local function exp_buildItemCraftingQueue(item, count, availableResources, recip
 
                     -- Put recipe on a stack if there's only one
                     if #inputRecipes == 1 then
-                        inputRecipes[i].multiplier = recipesQueue[i].multiplier * math.ceil(input.count / inputRecipes[i].count)
+                        inputRecipes[1].multiplier = recipesQueue[i].multiplier * math.ceil(input.count / inputRecipes[1].count)
 
                         table.insert(recipesQueue, inputRecipes[1])
 
