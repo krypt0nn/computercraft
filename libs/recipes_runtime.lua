@@ -13,7 +13,7 @@ local packages = dofile("require.lua")({
 
 local function info()
     return {
-        version = 6
+        version = 7
     }
 end
 
@@ -111,6 +111,8 @@ local function clearStorages(storageInventory, pool)
     local movedItems = {}
 
     for action, executers in pairs(pool) do
+        movedItems[action] = {}
+
         for id, executer in pairs(executers) do
             movedItems[action][id] = {
                 input  = packages.inventory.migrateItems(executer.input, storageInventory),
