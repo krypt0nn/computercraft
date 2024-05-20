@@ -3,13 +3,13 @@ local packages = dofile("require.lua")({
     cache = "cache",
     packages = {
         inventory = {
-            minimalVersion = 16
+            minimalVersion = 17
         },
         recipes = {
             minimalVersion = 34
         },
         recipes_runtime = {
-            minimalVersion = 5
+            minimalVersion = 6
         }
     }
 })
@@ -79,10 +79,15 @@ local pool = packages.recipes_runtime.pool({
 
 --------------------- Settings ---------------------
 
+-- Check that main storage inventory is correct
 if not packages.inventory.isInventory(storageInventory) then
     error("Wrong main storage inventory name")
 end
 
+-- Clear inputs and outputs of all the executers
+packages.recipes_runtime.clearStorages(storageInventory, pool)
+
+-- Open modem to send commands
 rednet.open(modem)
 
 while true do
