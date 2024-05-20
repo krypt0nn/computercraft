@@ -6,7 +6,7 @@ local packages = dofile("require.lua")({
             minimalVersion = 17
         },
         recipes = {
-            minimalVersion = 34
+            minimalVersion = 44
         },
         recipes_runtime = {
             minimalVersion = 7
@@ -21,9 +21,6 @@ local modem = "top"
 
 -- Main storage interface name
 local storageInventory = "toms_storage:ts.inventory_connector_0"
-
--- Perform recipes queues optimizations (experimental)
-local optimizeRecipes = true
 
 -- Register recipes executers pool
 local pool = packages.recipes_runtime.pool({
@@ -99,33 +96,54 @@ while true do
 
     local count = io.read()
 
-    local craftQueue, resourcesHint = packages.recipes.findRecipeExecutionQueue(
-        packages.inventory.listItems(storageInventory),
+    print("[*] Building crafting queue...")
+
+    local craftingQueue, hint = packages.recipes.buildItemCraftingQueue(
         name,
-        count
+        count,
+        packages.inventory.listItems(storageInventory)
     )
 
-    if craftQueue then
-        print("Found craft with " .. #craftQueue .. " steps")
+    if not craftingQueue then
+        print("[!] Couldn't build crafting queue")
 
-        if optimizeRecipes then
-            craftQueue = packages.recipes.batchRecipeExecutionQueue(
-                craftQueue,
-                name
-            )
+        if hint then
+            print("    Possible solution:")
 
-            print("Optimized to " .. #craftQueue .. " steps")
+            local function printHint(hint, prefix)
+                print(prefix .. "- Add [" .. hint.name .. "] x" .. hint.count)
+
+                if hint.subhint then
+                    printHints(hint.subhint, "  " .. prefix)
+                end
+            end
+
+            printHint(hint, "    ")
+        end
+    else
+        print("[*] Built queue with " .. #craftingQueue .. " steps")
+
+        if not packages.recipes.craftingQueueIsOptimal(craftingQueue) then
+            print("[!] Crafting queue is suboptimal")
+            io.write("[?] Run dependency resolver? (y/N)")
+
+            if io.read() == "y" then
+                print("[!] Dependency Resolver Optimizer is not implemented for this version yet. Skipping...")
+            end
         end
 
         print()
 
         local craftStartTime = os.epoch("utc")
 
-        for step, recipe in pairs(craftQueue) do
-            local prefix = "[" .. math.floor(step / #craftQueue * 100) .. "%]"
+        for i = #craftingQueue, 1, -1 do
+            local step   = #craftingQueue - i + 1
+            local action = craftingQueue[i]
+
+            local prefix = "[" .. math.floor(step / #craftingQueue * 100) .. "%]"
 
             -- Execute recipe
-            local result, reason = packages.recipes_runtime.executeRecipe(storageInventory, recipe, pool)
+            local result, reason = packages.recipes_runtime.executeRecipe(storageInventory, action.recipe, pool)
 
             -- Stop execution if failed
             if not result then
@@ -152,7 +170,7 @@ while true do
 
             -- Calculate total ETA
             local craftingTime = os.epoch("utc") - craftStartTime
-            local craftingEta = math.ceil((#craftQueue * craftingTime / step - craftingTime) / 10) / 100
+            local craftingEta = math.ceil((#craftingQueue * craftingTime / step - craftingTime) / 10) / 100
 
             -- Add ETA to the prefix
             prefix = prefix .. "[ETA: " .. craftingEta .. " sec]"
@@ -164,29 +182,7 @@ while true do
         -- Print crafting time
         local craftingTime = math.ceil((os.epoch("utc") - craftStartTime) / 10) / 100
 
-        print("Craft finished in " .. craftingTime .. " sec")
-    else
-        print("Couldn't find crafting queue")
-
-        if #resourcesHint > 0 then
-            print("Required items:")
-
-            local function printHints(hints, prefix)
-                if not prefix then
-                    prefix = ""
-                end
-
-                for _, hint in pairs(hints) do
-                    print(prefix .. "- Add [" .. hint.name .. "] x" .. hint.count)
-
-                    if hint.subhint then
-                        printHints(hint.subhint, "  " .. prefix)
-                    end
-                end
-            end
-
-            printHints(resourcesHint)
-        end
+        print("[*] Craft finished in " .. craftingTime .. " sec")
     end
 
     print()
