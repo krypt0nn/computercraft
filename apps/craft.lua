@@ -126,6 +126,7 @@ while true do
 
         if not packages.recipes.craftingQueueIsOptimal(craftingQueue) then
             print("[!] Crafting queue is suboptimal")
+            print()
 
             local function askFor(message, default)
                 io.write("[?] " .. message)
@@ -151,10 +152,12 @@ while true do
 
                 craftingQueue = packages.recipes.inlineOptimizer(craftingQueue)
 
-                print("[*] Done")
+                print("[*] Optimization finished")
+                print()
             end
         end
 
+        print("[*] Crafting queue started...")
         print()
 
         -- Count total number of steps
