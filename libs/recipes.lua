@@ -1,6 +1,6 @@
 local function info()
     return {
-        version = 43
+        version = 44
     }
 end
 
@@ -190,6 +190,7 @@ local function findRecipes(item, folders)
         for _, output in pairs(recipe.output) do
             if string.find(output.name, item) then
                 table.insert(foundRecipes, {
+                    name   = output.name,
                     recipe = recipe,
                     count  = output.count
                 })
@@ -202,7 +203,9 @@ local function findRecipes(item, folders)
     return foundRecipes
 end
 
-local function exp_buildItemCraftingQueue(item, count, availableResources, recipesFolders)
+-- Build item crafting queue using list of available resources
+-- and paths to search for recipes in
+local function buildItemCraftingQueue(item, count, availableResources, recipesFolders)
     local recipes = findRecipes(item, recipesFolders)
 
     -- If no recipes found for given item
@@ -272,7 +275,7 @@ local function exp_buildItemCraftingQueue(item, count, availableResources, recip
 
                     -- Otherwise find input's crafting queue recurrently
                     else
-                        local inputCraftingQueue, inputRecipeHint = exp_buildItemCraftingQueue(
+                        local inputCraftingQueue, inputRecipeHint = buildItemCraftingQueue(
                             input.name,
                             recipesQueue[i].multiplier * input.count,
                             remainingResources,
@@ -302,92 +305,27 @@ local function exp_buildItemCraftingQueue(item, count, availableResources, recip
     end
 end
 
--- Try to find the most optimal recipe execution queue
--- to craft an item from available resources
-local function findRecipeExecutionQueue(available, item, count, folders)
-    local recipeHints = {}
+-- Check if given crafting queue is optimal
+local function craftingQueueIsOptimal(queue)
+    local usedCrafts = {}
 
-    -- Try to find known recipes for needed item
-    for _, recipe in pairs(findRecipes(item, folders)) do
-        local remainingResources = available
-
-        local queue = {}
-        local correctQueue = true
-
-        -- Put crafts to the queue to get needed amount of items
-        for i = 1, math.ceil(count / recipe.count) do
-            local correctRecipe = true
-
-            -- Go through recipe input resources
-            for _, input in pairs(recipe.recipe.input) do
-                local craft = 0
-
-                -- If none available - craft needed amount
-                if not remainingResources[input.name] then
-                    craft = input.count
-
-                -- If more than available needed - craft what's absent
-                elseif input.count > remainingResources[input.name].count then
-                    craft = input.count - remainingResources[input.name].count
-
-                    remainingResources[input.name].count = 0
-
-                -- Otherwise we have just enough resources so only need
-                -- to decreese their remaining value
-                else
-                    remainingResources[input.name].count = remainingResources[input.name].count - input.count
-                end
-
-                -- If we need to craft anything
-                if craft > 0 then
-                    -- Prepare needed resources crafting queue
-                    local inputCraftQueue, inputCraftHint = findRecipeExecutionQueue(remainingResources, input.name, craft)
-
-                    -- Stop search if it's not available
-                    if not inputCraftQueue then
-                        correctRecipe = false
-
-                        -- Put required item to the hints
-                        table.insert(recipeHints, {
-                            name    = input.name,
-                            count   = craft,
-                            subhint = inputCraftHint
-                        })
-
-                        break
-                    end
-
-                    -- Otherwise merge the queues
-                    for _, inputCraftRecipe in pairs(inputCraftQueue) do
-                        table.insert(queue, inputCraftRecipe)
-                    end
-                end
-            end
-
-            -- Stop search if the recipe is incorrect
-            if not correctRecipe then
-                correctQueue = false
-
-                break
-            end
-
-            -- Put the recipe to the queue otherwise
-            table.insert(queue, recipe.recipe)
+    for _, action in pairs(queue) do
+        if usedCrafts[action.name] then
+            return false
         end
 
-        -- Return prepared craft queue if everything is correct
-        if correctQueue then
-            return queue
-        end
+        usedCrafts[action.name] = true
     end
 
-    -- Recipe wasn't found
-    return nil, recipeHints
+    return true
 end
 
+-- TODO: rewrite to work with buildItemCraftingQueue
 -- Get crafting dependency tree from the queue
 local function getQueueDependencyTree(queue)
     local tree = {}
+
+    print("[getQueueDependencyTree] DEPRECATED, MUSTN'T BE USED")
 
     for _, recipe in pairs(queue) do
         for _, output in pairs(recipe.output) do
@@ -408,10 +346,13 @@ local function getQueueDependencyTree(queue)
     return tree
 end
 
+-- TODO: rewrite to work with buildItemCraftingQueue
 -- Convert dependency tree to the dependency queue
 -- starting from the [name] item
 local function resolveDependencyTree(tree, name)
     local queue = {}
+
+    print("[resolveDependencyTree] DEPRECATED, MUSTN'T BE USED")
 
     if tree[name] then
         table.insert(queue, tree[name])
@@ -515,10 +456,13 @@ local function batchRecipe(recipe, original)
     return recipe
 end
 
+-- TODO: rewrite to work with buildItemCraftingQueue
 -- Batch-optimize found crafting queue around given output name
 local function batchRecipeExecutionQueue(queue, name)
     local dependencies = getQueueDependencyTree(queue)
     local dependenciesQueue = resolveDependencyTree(dependencies, name)
+
+    print("[batchRecipeExecutionQueue] DEPRECATED, MUSTN'T BE USED")
 
     local queue = {}
 
@@ -560,11 +504,15 @@ return {
     craft = craft,
     recipes = recipes,
     findRecipes = findRecipes,
-    exp_buildItemCraftingQueue = exp_buildItemCraftingQueue,
-    findRecipeExecutionQueue = findRecipeExecutionQueue,
-    getQueueDependencyTree = getQueueDependencyTree,
-    resolveDependencyTree = resolveDependencyTree,
+
+    buildItemCraftingQueue = buildItemCraftingQueue,
+    craftingQueueIsOptimal = craftingQueueIsOptimal,
+
     canBatchRecipe = canBatchRecipe,
     batchRecipe = batchRecipe,
+
+    -- Deprecated functions
+    getQueueDependencyTree = getQueueDependencyTree,
+    resolveDependencyTree = resolveDependencyTree,
     batchRecipeExecutionQueue = batchRecipeExecutionQueue
 }
