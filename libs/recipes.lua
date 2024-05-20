@@ -1,6 +1,6 @@
 local function info()
     return {
-        version = 35
+        version = 36
     }
 end
 
@@ -205,7 +205,7 @@ local function exp_buildItemCraftingQueue(item, count, availableItems, recipesFo
         local i = 1
 
         -- Iterate over recipes stack
-        while recipesQueue[i] then
+        while recipesQueue[i] do
             table.insert(craftingQueue, recipesQueue[i])
 
             for _, input in pairs(recipesQueue[i].recipe.input) do
