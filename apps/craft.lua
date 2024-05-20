@@ -96,6 +96,7 @@ while true do
 
     local count = io.read()
 
+    print()
     print("[*] Building crafting queue...")
 
     local craftingQueue, hint = packages.recipes.buildItemCraftingQueue(
@@ -134,49 +135,63 @@ while true do
 
         print()
 
+        -- Count total number of steps
+        local totalSteps  = 0
+        local currentStep = 0
+
+        for _, action in pairs(craftingQueue) do
+            totalSteps = totalSteps + action.multiplier
+        end
+
+        -- Start queue execution
         local craftStartTime = os.epoch("utc")
 
+        -- Iterate over actions
         for i = #craftingQueue, 1, -1 do
-            local step   = #craftingQueue - i + 1
             local action = craftingQueue[i]
 
-            local prefix = "[" .. math.floor(step / #craftingQueue * 100) .. "%]"
+            -- Iterate over action multiplier
+            for j = 1, action.multiplier do
+                currentStep = currentStep + 1
 
-            -- Execute recipe
-            local result, reason = packages.recipes_runtime.executeRecipe(storageInventory, action.recipe, pool)
+                local prefix = "[" .. math.floor(currentStep / totalSteps * 100) .. "%]"
 
-            -- Stop execution if failed
-            if not result then
-                print(prefix .. " Couldn't execute recipe: " .. reason)
+                -- Execute recipe
+                local result, reason = packages.recipes_runtime.executeRecipe(storageInventory, action.recipe, pool)
 
-                break
-            end
+                -- Stop execution if failed
+                if not result then
+                    print(prefix .. " Couldn't execute recipe: " .. reason)
 
-            -- Add recipe execution time to the prefix
-            local recipeTime = math.ceil(result.time.duration / 10) / 100
-
-            prefix = prefix .. "[" .. recipeTime .. " sec]"
-
-            -- List recipe result
-            local recipeResult = ""
-
-            for _, result in pairs(result.result) do
-                if recipeResult == "" then
-                    recipeResult = "[" .. result.name .. "] x" .. result.count
-                else
-                    recipeResult = recipeResult .. ", [" .. result.name .. "] x" .. result.count
+                    break
                 end
+
+                -- Add recipe execution time to the prefix
+                local recipeTime = math.ceil(result.time.duration / 10) / 100
+
+                prefix = prefix .. "[" .. recipeTime .. " sec]"
+
+                -- List recipe result
+                local recipeResult = ""
+
+                for _, result in pairs(result.result) do
+                    if recipeResult == "" then
+                        recipeResult = "[" .. result.name .. "] x" .. result.count
+                    else
+                        recipeResult = recipeResult .. ", [" .. result.name .. "] x" .. result.count
+                    end
+                end
+
+                -- Calculate total ETA
+                local craftingTime = os.epoch("utc") - craftStartTime
+                local craftingEta = math.ceil((totalSteps * craftingTime / currentStep - craftingTime) / 10) / 100
+
+                -- Add ETA to the prefix
+                prefix = prefix .. "[ETA: " .. craftingEta .. " sec]"
+
+                print(prefix .. " Crafted " .. recipeResult)
+                print()
             end
-
-            -- Calculate total ETA
-            local craftingTime = os.epoch("utc") - craftStartTime
-            local craftingEta = math.ceil((#craftingQueue * craftingTime / step - craftingTime) / 10) / 100
-
-            -- Add ETA to the prefix
-            prefix = prefix .. "[ETA: " .. craftingEta .. " sec]"
-
-            print(prefix .. " Crafted " .. recipeResult)
-            print()
         end
 
         -- Print crafting time
