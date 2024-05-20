@@ -1,6 +1,6 @@
 local function info()
     return {
-        version = 44
+        version = 45
     }
 end
 
@@ -310,7 +310,9 @@ local function craftingQueueIsOptimal(queue)
     local usedCrafts = {}
 
     for _, action in pairs(queue) do
-        if usedCrafts[action.name] then
+        -- TODO: Not really > 1, better say if it doesn't have
+        --       *full stack* inputs/outputs AND has multiplier > 1
+        if usedCrafts[action.name] or action.multiplier > 1 then
             return false
         end
 
@@ -318,6 +320,37 @@ local function craftingQueueIsOptimal(queue)
     end
 
     return true
+end
+
+-- Run inline optimizer on given crafting queue
+local function inlineOptimizer(queue)
+    local optimizedQueue = {}
+
+    for _, action in queue do
+        local repeats = 0
+
+        while repeats < action.multiplier do
+            local batchedRecipe = cloneTable(action.recipe)
+
+            repeats = repeats + 1
+
+            while repeats < action.multiplier do
+                -- Break current batched recipe if can't continue
+                if not canBatchRecipe(batchedRecipe, action.recipe) then
+                    break
+                end
+
+                -- Batch recipe
+                batchedRecipe = batchRecipe(batchedRecipe, action.recipe)
+
+                repeats = repeats + 1
+            end
+
+            table.insert(optimizedQueue, batchedRecipe)
+        end
+    end
+
+    return optimizedQueue
 end
 
 -- TODO: rewrite to work with buildItemCraftingQueue
@@ -505,9 +538,14 @@ return {
     recipes = recipes,
     findRecipes = findRecipes,
 
+    -- Crafting queue
     buildItemCraftingQueue = buildItemCraftingQueue,
     craftingQueueIsOptimal = craftingQueueIsOptimal,
 
+    -- Optmizers
+    inlineOptimizer = inlineOptimizer,
+
+    -- Service functions
     canBatchRecipe = canBatchRecipe,
     batchRecipe = batchRecipe,
 
