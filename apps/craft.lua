@@ -6,7 +6,7 @@ local packages = dofile("require.lua")({
             minimalVersion = 18
         },
         recipes = {
-            minimalVersion = 51
+            minimalVersion = 52
         },
         recipes_runtime = {
             minimalVersion = 7
@@ -108,7 +108,7 @@ while true do
     if not craftingQueue then
         print("[!] Couldn't build crafting queue")
 
-        if hints then
+        if hints and #hints > 0 then
             print("    Possible solution:")
 
             local function printHints(hints, prefix)
@@ -120,7 +120,7 @@ while true do
                     end
 
                     if hint.subhints then
-                        printHints(hint.subhint, "  " .. prefix)
+                        printHints(hint.subhints, prefix .. "  ")
                     end
                 end
             end

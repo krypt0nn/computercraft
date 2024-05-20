@@ -1,6 +1,6 @@
 local function info()
     return {
-        version = 51
+        version = 52
     }
 end
 
@@ -269,7 +269,7 @@ local function buildItemCraftingQueue(item, count, availableResources, recipesFo
 
                     -- If no recipes found for given item
                     if not inputRecipes or #inputRecipes == 0 then
-                        table.insert(craftingQueue, {
+                        table.insert(hints, {
                             name     = input.name,
                             count    = multipliedInputCount,
                             subhints = nil
