@@ -1,6 +1,6 @@
 local function info()
     return {
-        version = 39
+        version = 40
     }
 end
 
@@ -210,7 +210,7 @@ local function exp_buildItemCraftingQueue(item, count, availableResources, recip
         return nil, {
             name    = item,
             count   = count,
-            subhint = {}
+            subhint = nil
         }
     end
 
@@ -239,7 +239,7 @@ local function exp_buildItemCraftingQueue(item, count, availableResources, recip
                     return nil, {
                         name    = input.name,
                         count   = recipesQueue[i].multiplier * input.count,
-                        subhint = {}
+                        subhint = nil
                     }
                 end
 
