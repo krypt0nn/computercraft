@@ -1,6 +1,6 @@
 local function info()
     return {
-        version = 49
+        version = 50
     }
 end
 
@@ -211,11 +211,15 @@ local function buildItemCraftingQueue(item, count, availableResources, recipesFo
     -- If no recipes found for given item
     if not recipes or #recipes == 0 then
         return nil, {
-            name    = item,
-            count   = count,
-            subhint = nil
+            {
+                name     = item,
+                count    = count,
+                subhints = nil
+            }
         }
     end
+
+    local hints = {}
 
     -- This function will expect its first recipe to be recurrent, but
     -- other recipes will be tried to be executed on a stack
@@ -227,6 +231,8 @@ local function buildItemCraftingQueue(item, count, availableResources, recipesFo
 
         local craftingQueue = {}
         local recipesQueue = { recipe }
+
+        local correctCraft = true
 
         local i = 1
 
@@ -260,11 +266,15 @@ local function buildItemCraftingQueue(item, count, availableResources, recipesFo
 
                     -- If no recipes found for given item
                     if not inputRecipes or #inputRecipes == 0 then
-                        return nil, {
-                            name    = input.name,
-                            count   = recipesQueue[i].multiplier * input.count,
-                            subhint = nil
-                        }
+                        table.insert(craftingQueue, {
+                            name     = input.name,
+                            count    = recipesQueue[i].multiplier * input.count,
+                            subhints = nil
+                        })
+
+                        correctCraft = false
+
+                        break
                     end
 
                     -- Put recipe on a stack if there's only one
@@ -275,7 +285,7 @@ local function buildItemCraftingQueue(item, count, availableResources, recipesFo
 
                     -- Otherwise find input's crafting queue recurrently
                     else
-                        local inputCraftingQueue, inputRecipeHint = buildItemCraftingQueue(
+                        local inputCraftingQueue, inputRecipeHints = buildItemCraftingQueue(
                             input.name,
                             recipesQueue[i].multiplier * input.count,
                             remainingResources,
@@ -284,11 +294,15 @@ local function buildItemCraftingQueue(item, count, availableResources, recipesFo
 
                         -- If couldn't find the queue - panic
                         if not inputCraftingQueue then
-                            return nil, {
-                                name    = input.name,
-                                count   = recipesQueue[i].multiplier * input.count,
-                                subhint = inputRecipeHint
-                            }
+                            table.insert(hints, {
+                                name     = input.name,
+                                count    = recipesQueue[i].multiplier * input.count,
+                                subhints = inputRecipeHints
+                            })
+
+                            correctCraft = false
+
+                            break
                         end
 
                         for _, craft in pairs(inputCraftingQueue) do
@@ -298,11 +312,19 @@ local function buildItemCraftingQueue(item, count, availableResources, recipesFo
                 end
             end
 
+            if not correctCraft then
+                break
+            end
+
             i = i + 1
         end
 
-        return craftingQueue
+        if correctCraft then
+            return craftingQueue
+        end
     end
+
+    return nil, hints
 end
 
 -- Check if given crafting queue is optimal
