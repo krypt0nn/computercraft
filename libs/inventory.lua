@@ -1,6 +1,6 @@
 local function info()
     return {
-        version = 17
+        version = 18
     }
 end
 
@@ -147,6 +147,10 @@ local function migrateItems(from, to, ignoreList)
 
     if not fromItemsList then
         error("Can't list items in inventory " .. from)
+    end
+
+    if type(ignoreList) ~= "table" then
+        ignoreList = {}
     end
 
     local movedItems = {}
