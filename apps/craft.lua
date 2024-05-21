@@ -229,7 +229,7 @@ while true do
                         end
 
                         -- Add recipe execution time to the prefix
-                        local recipeTime = math.ceil(result.time.duration / 10) / 100
+                        local recipeTime = math.ceil(result.time.duration / 1000)
 
                         prefix = prefix .. "[" .. recipeTime .. " sec]"
 
@@ -246,7 +246,7 @@ while true do
 
                         -- Calculate total ETA
                         local craftingTime = os.epoch("utc") - craftStartTime
-                        local craftingEta = math.ceil((totalSteps * craftingTime / currentStep - craftingTime) / 10) / 100
+                        local craftingEta = math.ceil((totalSteps * craftingTime / currentStep - craftingTime) / 1000)
 
                         -- Add ETA to the prefix
                         prefix = prefix .. "[ETA: " .. craftingEta .. " sec]"
@@ -257,7 +257,7 @@ while true do
                 end
 
                 -- Print crafting time
-                local craftingTime = math.ceil((os.epoch("utc") - craftStartTime) / 10) / 100
+                local craftingTime = math.ceil((os.epoch("utc") - craftStartTime) / 1000)
 
                 print("[*] Craft finished in " .. craftingTime .. " sec")
             end
