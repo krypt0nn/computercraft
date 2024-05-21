@@ -125,14 +125,14 @@ while true do
         else
             io.write("[?] Crafting amount: ")
 
-            local count = io.read()
+            local recipeCount = io.read()
 
             print()
             print("[*] Building crafting queue...")
 
             local craftingQueue, hints = packages.recipes.buildItemCraftingQueue(
-                name,
-                count,
+                recipeName,
+                recipeCount,
                 packages.inventory.listItems(storageInventory)
             )
 
