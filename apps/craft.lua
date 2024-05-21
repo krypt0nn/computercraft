@@ -88,147 +88,180 @@ packages.recipes_runtime.clearStorages(storageInventory, pool)
 rednet.open(modem)
 
 while true do
-    io.write("What should I craft? ")
+    io.write("[?] Crafting recipe: ")
 
-    local name = io.read()
+    -- Search for recipes
+    local recipes = packages.recipes.findRecipes(io.read())
 
-    io.write("How many? ")
-
-    local count = io.read()
-
-    print()
-    print("[*] Building crafting queue...")
-
-    local craftingQueue, hints = packages.recipes.buildItemCraftingQueue(
-        name,
-        count,
-        packages.inventory.listItems(storageInventory)
-    )
-
-    if not craftingQueue then
-        print("[!] Couldn't build crafting queue")
-
-        if hints and #hints > 0 then
-            print("    Possible solution:")
-
-            local function printHints(hints, prefix)
-                for i, hint in pairs(hints) do
-                    if i == 1 then
-                        print(prefix .. "- Add [" .. hint.name .. "] x" .. hint.count)
-                    else
-                        print(prefix .. "- ...or add [" .. hint.name .. "] x" .. hint.count)
-                    end
-
-                    if hint.subhints then
-                        printHints(hint.subhints, prefix .. "  ")
-                    end
-                end
-            end
-
-            printHints(hints, "    ")
-        end
-    else
-        print("[*] Built queue with " .. #craftingQueue .. " actions")
-
-        if not packages.recipes.craftingQueueIsOptimal(craftingQueue) then
-            print("[!] Crafting queue is suboptimal")
-            print()
-
-            local function askFor(message, default)
-                io.write("[?] " .. message)
-
-                if default then
-                    io.write(" (Y/n): ")
-                else
-                    io.write(" (y/N): ")
-                end
-
-                local input = string.lower(io.read())
-
-                if default then
-                    return input ~= "n" and input ~= "no"
-                else
-                    return input ~= "y" and input ~= "ye" and input ~= "yes"
-                end
-            end
-
-            -- Ask for inline optimizer
-            if askFor("Run inline optimizer", true) then
-                print("[*] Started inline optimizer...")
-
-                craftingQueue = packages.recipes.inlineOptimizer(craftingQueue)
-
-                print("[*] Optimization finished")
-                print()
-            end
-        end
-
-        print("[*] Crafting queue started...")
+    if #recipes == 0 then
         print()
+        print("[!] No recipes found")
+    else
+        local recipeName = nil
 
-        -- Count total number of steps
-        local totalSteps  = 0
-        local currentStep = 0
+        if #recipes == 1 then
+            recipeName = recipes[1].name
+        else
+            print()
+            print("[*] Multiple recipes found:")
 
-        for _, action in pairs(craftingQueue) do
-            totalSteps = totalSteps + action.multiplier
-        end
+            for i, recipe in pairs(recipes) do
+                print("    " .. i .. ". " .. recipe.name)
+            end
 
-        -- Start queue execution
-        local craftStartTime = os.epoch("utc")
+            print()
+            io.write("[?] Recipe number: ")
 
-        -- Iterate over actions
-        for i = #craftingQueue, 1, -1 do
-            local action = craftingQueue[i]
+            local recipeNumber = tonumber(io.read())
 
-            -- Iterate over action multiplier
-            for j = 1, action.multiplier do
-                currentStep = currentStep + 1
-
-                local prefix = "[" .. math.floor(currentStep / totalSteps * 100) .. "%]"
-
-                -- Execute recipe
-                local result, reason = packages.recipes_runtime.executeRecipe(storageInventory, action.recipe, pool)
-
-                -- Stop execution if failed
-                if not result then
-                    print(prefix .. " Couldn't execute recipe: " .. reason)
-
-                    break
-                end
-
-                -- Add recipe execution time to the prefix
-                local recipeTime = math.ceil(result.time.duration / 10) / 100
-
-                prefix = prefix .. "[" .. recipeTime .. " sec]"
-
-                -- List recipe result
-                local recipeResult = ""
-
-                for _, result in pairs(result.result) do
-                    if recipeResult == "" then
-                        recipeResult = "[" .. result.name .. "] x" .. result.count
-                    else
-                        recipeResult = recipeResult .. ", [" .. result.name .. "] x" .. result.count
-                    end
-                end
-
-                -- Calculate total ETA
-                local craftingTime = os.epoch("utc") - craftStartTime
-                local craftingEta = math.ceil((totalSteps * craftingTime / currentStep - craftingTime) / 10) / 100
-
-                -- Add ETA to the prefix
-                prefix = prefix .. "[ETA: " .. craftingEta .. " sec]"
-
-                print(prefix .. " Crafted " .. recipeResult)
-                print()
+            if recipes[recipeNumber] then
+                recipeName = recipes[recipeNumber].name
             end
         end
 
-        -- Print crafting time
-        local craftingTime = math.ceil((os.epoch("utc") - craftStartTime) / 10) / 100
+        if not recipeName then
+            print()
+            print("[!] No recipe name given. Closing request")
+        else
+            io.write("[?] Crafting amount: ")
 
-        print("[*] Craft finished in " .. craftingTime .. " sec")
+            local count = io.read()
+
+            print()
+            print("[*] Building crafting queue...")
+
+            local craftingQueue, hints = packages.recipes.buildItemCraftingQueue(
+                name,
+                count,
+                packages.inventory.listItems(storageInventory)
+            )
+
+            if not craftingQueue then
+                print("[!] Couldn't build crafting queue")
+
+                if hints and #hints > 0 then
+                    print("    Possible solution:")
+
+                    local function printHints(hints, prefix)
+                        for i, hint in pairs(hints) do
+                            if i == 1 then
+                                print(prefix .. "- Add [" .. hint.name .. "] x" .. hint.count)
+                            else
+                                print(prefix .. "- ...or add [" .. hint.name .. "] x" .. hint.count)
+                            end
+
+                            if hint.subhints then
+                                printHints(hint.subhints, prefix .. "  ")
+                            end
+                        end
+                    end
+
+                    printHints(hints, "    ")
+                end
+            else
+                print("[*] Built queue with " .. #craftingQueue .. " actions")
+
+                if not packages.recipes.craftingQueueIsOptimal(craftingQueue) then
+                    print("[!] Crafting queue is suboptimal")
+                    print()
+
+                    local function askFor(message, default)
+                        io.write("[?] " .. message)
+
+                        if default then
+                            io.write(" (Y/n): ")
+                        else
+                            io.write(" (y/N): ")
+                        end
+
+                        local input = string.lower(io.read())
+
+                        if default then
+                            return input ~= "n" and input ~= "no"
+                        else
+                            return input ~= "y" and input ~= "ye" and input ~= "yes"
+                        end
+                    end
+
+                    -- Ask for inline optimizer
+                    if askFor("Run inline optimizer", true) then
+                        print("[*] Started inline optimizer...")
+
+                        craftingQueue = packages.recipes.inlineOptimizer(craftingQueue)
+
+                        print("[*] Optimization finished")
+                        print()
+                    end
+                end
+
+                print("[*] Crafting queue started...")
+                print()
+
+                -- Count total number of steps
+                local totalSteps  = 0
+                local currentStep = 0
+
+                for _, action in pairs(craftingQueue) do
+                    totalSteps = totalSteps + action.multiplier
+                end
+
+                -- Start queue execution
+                local craftStartTime = os.epoch("utc")
+
+                -- Iterate over actions
+                for i = #craftingQueue, 1, -1 do
+                    local action = craftingQueue[i]
+
+                    -- Iterate over action multiplier
+                    for j = 1, action.multiplier do
+                        currentStep = currentStep + 1
+
+                        local prefix = "[" .. math.floor(currentStep / totalSteps * 100) .. "%]"
+
+                        -- Execute recipe
+                        local result, reason = packages.recipes_runtime.executeRecipe(storageInventory, action.recipe, pool)
+
+                        -- Stop execution if failed
+                        if not result then
+                            print(prefix .. " Couldn't execute recipe: " .. reason)
+
+                            break
+                        end
+
+                        -- Add recipe execution time to the prefix
+                        local recipeTime = math.ceil(result.time.duration / 10) / 100
+
+                        prefix = prefix .. "[" .. recipeTime .. " sec]"
+
+                        -- List recipe result
+                        local recipeResult = ""
+
+                        for _, result in pairs(result.result) do
+                            if recipeResult == "" then
+                                recipeResult = "[" .. result.name .. "] x" .. result.count
+                            else
+                                recipeResult = recipeResult .. ", [" .. result.name .. "] x" .. result.count
+                            end
+                        end
+
+                        -- Calculate total ETA
+                        local craftingTime = os.epoch("utc") - craftStartTime
+                        local craftingEta = math.ceil((totalSteps * craftingTime / currentStep - craftingTime) / 10) / 100
+
+                        -- Add ETA to the prefix
+                        prefix = prefix .. "[ETA: " .. craftingEta .. " sec]"
+
+                        print(prefix .. " Crafted " .. recipeResult)
+                        print()
+                    end
+                end
+
+                -- Print crafting time
+                local craftingTime = math.ceil((os.epoch("utc") - craftStartTime) / 10) / 100
+
+                print("[*] Craft finished in " .. craftingTime .. " sec")
+            end
+        end
     end
 
     print()
