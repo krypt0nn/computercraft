@@ -1,6 +1,6 @@
 local function info()
     return {
-        version = 53
+        version = 54
     }
 end
 
@@ -146,7 +146,9 @@ local function recipes(folders, cache)
     local recipes = {}
 
     if not folders then
-        folders = { "recipes", "disk/recipes" }
+        folders = fs.find("*/recipes") or {}
+
+        table.insert(folders, "recipes")
     end
 
     if type(folders) ~= "table" then
