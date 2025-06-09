@@ -33,4 +33,8 @@ local packages = dofile("require.lua")({
 packages.fuel.refuel()
 ```
 
-If `cache` field is given, then packages will be cached to the local folder. Otherwise they will always be loaded dynamically from the internet.
+If `cache` field is given, then packages will be cached to the local folder.
+Otherwise they will always be loaded dynamically from the internet.
+
+Author: [Nikita Podvirnyi](https://github.com/krypt0nn)\
+Licensed under [MIT](LICENSE)
