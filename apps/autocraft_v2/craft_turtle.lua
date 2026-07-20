@@ -1,6 +1,4 @@
-local REDNET_MODEM_SIDE     = "right"
-local INPUT_INVENTORY_SIDE  = "top"
-local OUTPUT_INVENTORY_SIDE = "front"
+local REDNET_MODEM_SIDE = "right"
 
 local function recipe_to_turtle_slot(slot)
     if slot == 1 then return 1 end
@@ -21,121 +19,99 @@ end
 rednet.open(REDNET_MODEM_SIDE)
 
 while true do
-    local sender_id, data, protocol = rednet.receive()
+    local sender_id, layout, protocol = rednet.receive()
 
-    if data and data.inputs then
-        local input_inventory = peripheral.wrap(INPUT_INVENTORY_SIDE)
-        local output_inventory = peripheral.wrap(OUTPUT_INVENTORY_SIDE)
+    if layout then
+        -- Clear turtle inventory
+        for slot = 1, 16 do
+            local item = turtle.getItemDetail(slot)
 
-        if not input_inventory or not output_inventory then
-            rednet.send(sender_id, {
-                success = false,
-                error = "missing inventory"
-            }, protocol)
-        else
-            local available = {}
-            local failed = false
+            if item then
+                turtle.select(slot)
+                turtle.drop(item.count)
+            end
+        end
 
-            -- Clear turtle inventory to output
-            for slot = 1, 16 do
-                local info = turtle.getItemDetail(slot)
+        -- Fill grid from input
+        while true do
+            -- Take input resource
+            turtle.select(16)
+            turtle.suckUp()
 
-                if info then
-                    turtle.select(slot)
+            local item = turtle.getItemDetail(16)
 
-                    output_inventory.pullItem("turtle", slot, info.count)
-                end
+            if not item then
+                break
             end
 
-            turtle.select(4)
+            local unneeded = true
 
-            -- Prepare table of available input resources
-            for _, item in pairs(input_inventory.items()) do
-                if item.name and item.count then
-                    available[item.name] = (available[item.name] or 0) + item.count
-                end
-            end
+            -- Try to find it in the recipe
+            for slot, input in pairs(layout) do
+                if not input.used and input.name == item.name then
+                    -- If we took enough resources - mark resource as taken
+                    -- and move it to the needed slot
+                    if item.count >= input.count then
+                        input.used = true
+                        unneeded = false
 
-            -- Calculate how many times we can craft from available resources
-            local max_crafts = math.huge
+                        item.count = item.count - input.count
 
-            for _, resource in pairs(data.inputs.flat) do
-                if resource and resource.name and resource.count then
-                    local available_resource = available[resource.name] or 0
+                        turtle.transferTo(recipe_to_turtle_slot(slot), input.count)
 
-                    max_crafts = math.min(
-                        max_crafts,
-                        math.floor(available_resource / resource.count)
-                    )
-                end
-            end
-
-            while max_crafts > 0 do
-                -- Clear crafting grid slots
-                for slot = 1, 16 do
-                    local info = turtle.getItemDetail(slot)
-
-                    if info then
-                        turtle.select(slot)
-
-                        output_inventory.pullItem("turtle", slot, info.count)
-                    end
-                end
-
-                -- Fill crafting grid from input inventory
-                for slot = 1, 9 do
-                    local resource = data.inputs.layout[slot]
-
-                    if resource then
-                        for src_slot, item in pairs(input_inventory.items()) do
-                            if item.name == resource.name and item.count >= resource.count then
-                                input_inventory.pushItems(
-                                    "turtle",
-                                    src_slot,
-                                    resource.count,
-                                    recipe_to_turtle_slot(slot)
-                                )
-
-                                break
-                            end
+                        if item.count == 0 then
+                            break
                         end
                     end
                 end
+            end
 
-                -- Craft
-                turtle.select(4)
+            -- Return remaining resources to the output storage because we have
+            -- used it in every possible slot
+            if unneeded or item.count > 0 then
+                turtle.drop()
+            end
 
-                if not turtle.craft() then
-                    failed = true
+            -- Check if we've finished
+            local finished = true
+
+            for _, input in pairs(layout) do
+                if not input.used then
+                    finished = false
 
                     break
                 end
-
-                -- Push result to output
-                local result = turtle.getItemDetail()
-
-                if result then
-                    output_inventory.pullItem("turtle", 4, result.count)
-                end
-
-                max_crafts = max_crafts - 1
             end
 
-            -- Push all remaining items to output
-            for slot = 1, 16 do
-                local info = turtle.getItemDetail(slot)
-
-                if info then
-                    turtle.select(slot)
-
-                    output_inventory.pullItem("turtle", slot, info.count)
-                end
+            -- Stop resources input if everything's done
+            if finished then
+                break
             end
-
-            rednet.send(sender_id, {
-                success = not failed,
-                error = failed and "craft failed" or nil
-            }, protocol)
         end
+
+        -- Craft loop
+        turtle.select(4)
+
+        while turtle.craft() do
+            local result = turtle.getItemDetail(4)
+
+            if result then
+                turtle.drop(result.count)
+            end
+
+            turtle.select(4)
+        end
+
+        -- Clear turtle slots
+        for slot = 1, 16 do
+            local info = turtle.getItemDetail(slot)
+
+            if info then
+                turtle.select(slot)
+                turtle.drop(info.count)
+            end
+        end
+
+        rednet.send(sender_id, true, protocol)
     end
 end

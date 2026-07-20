@@ -170,6 +170,8 @@ function truncate_recipe_tree(tree)
             return
         end
 
+        local original_executions = node.executions
+
         for _, output in pairs(node.recipe.outputs.flat) do
             local available = available_items[output.name]
 
@@ -189,8 +191,13 @@ function truncate_recipe_tree(tree)
         end
 
         local clean_leafs = {}
+        local ratio = original_executions > 0 and (node.executions / original_executions) or 0
 
         for _, leaf in pairs(node.leafs) do
+            if ratio < 1 then
+                leaf.executions = math.ceil(leaf.executions * ratio)
+            end
+
             truncate(leaf)
 
             if leaf.executions > 0 then
@@ -340,24 +347,33 @@ for name, count in pairs(truncated_items) do
     end
 end
 
-for _, batch in ipairs(craft_batches) do
-    local inputs_needed = {}
+-- Calculate net raw materials needed across all batches
+local total_inputs = {}
+local total_outputs = {}
 
+for _, batch in ipairs(craft_batches) do
     for _, entry in ipairs(batch) do
         for name, input in pairs(entry.recipe.inputs.flat) do
-            inputs_needed[name] = (inputs_needed[name] or 0) + input.count * entry.executions
+            total_inputs[name] = (total_inputs[name] or 0) + input.count * entry.executions
+        end
+
+        for name, output in pairs(entry.recipe.outputs.flat) do
+            total_outputs[name] = (total_outputs[name] or 0) + output.count * entry.executions
         end
     end
+end
 
-    for _, item in pairs(working_inventory.items()) do
-        local needed = inputs_needed[item.name]
+for name, count in pairs(total_inputs) do
+    local produced = total_outputs[name] or 0
+    local deficit = count - produced
 
-        if needed then
-            inputs_needed[item.name] = math.max(0, needed - item.count)
+    if deficit > 0 then
+        for _, item in pairs(working_inventory.items()) do
+            if item.name == name then
+                deficit = math.max(0, deficit - item.count)
+            end
         end
-    end
 
-    for name, deficit in pairs(inputs_needed) do
         if deficit > 0 then
             local moved = working_inventory.pullItem(MASTER_INVENTORY, name, deficit)
 
@@ -386,12 +402,12 @@ for i, batch in ipairs(craft_batches) do
                 local input_inventory = peripheral.wrap(machine.input)
                 local output_inventory = peripheral.wrap(machine.output)
 
-                for slot, item in pairs(input_inventory.items()) do
-                    input_inventory.pushItems(WORKING_INVENTORY, slot, item.count)
+                for _, item in pairs(input_inventory.list()) do
+                    working_inventory.pullItem(machine.input, item.name, item.count)
                 end
 
-                for slot, item in pairs(output_inventory.items()) do
-                    output_inventory.pushItems(WORKING_INVENTORY, slot, item.count)
+                for _, item in pairs(output_inventory.list()) do
+                    working_inventory.pullItem(machine.output, item.name, item.count)
                 end
             end
 
@@ -413,12 +429,25 @@ for i, batch in ipairs(craft_batches) do
 
                 if curr_executions > 0 then
                     for name, input in pairs(entry.recipe.inputs.flat) do
-                        peripheral.wrap(machine.input).pullItem(
-                            WORKING_INVENTORY,
+                        working_inventory.pushItem(
+                            machine.input,
                             name,
                             input.count * curr_executions
                         )
                     end
+
+                    local layout = {}
+
+                    for slot, resource in pairs(entry.recipe.inputs.layout) do
+                        if resource then
+                            layout[slot] = {
+                                name = resource.name,
+                                count = resource.count * curr_executions
+                            }
+                        end
+                    end
+
+                    machine.layout = layout
 
                     round_executions = round_executions + curr_executions
                     remaining_executions = remaining_executions - curr_executions
@@ -435,18 +464,20 @@ for i, batch in ipairs(craft_batches) do
 
             -- Wait for machines to finish
             if entry.recipe.machine == "crafter" then
+                local reply_count = 0
+
                 for _, machine in ipairs(machines) do
-                    rednet.send(machine.id, entry.recipe)
+                    if machine.layout then
+                        rednet.send(machine.id, machine.layout)
+
+                        machine.layout = nil
+
+                        reply_count = reply_count + 1
+                    end
                 end
 
-                local reply_count = #machines
-
                 while reply_count > 0 do
-                    local _, reply = rednet.receive(120)
-
-                    if not reply or not reply.success then
-                        error("crafters error: " .. (reply and reply.error or "timeout"))
-                    end
+                    local _, _ = rednet.receive(120)
 
                     reply_count = reply_count - 1
                 end
@@ -466,10 +497,8 @@ for i, batch in ipairs(craft_batches) do
                     for _, machine in ipairs(machines) do
                         local inventory = peripheral.wrap(machine.output)
 
-                        if inventory then
-                            for _, item in pairs(inventory.items()) do
-                                current[item.name] = (current[item.name] or 0) + item.count
-                            end
+                        for _, item in pairs(inventory.list()) do
+                            current[item.name] = (current[item.name] or 0) + item.count
                         end
                     end
 
@@ -496,7 +525,13 @@ for i, batch in ipairs(craft_batches) do
                     error("processing timeout")
                 end
             end
-
         end
+    end
+end
+
+-- Move working inventory items into master inventory
+for _, item in pairs(working_inventory.items()) do
+    if item.name and item.count then
+        master_inventory.pullItem(WORKING_INVENTORY, item.name, item.count)
     end
 end
