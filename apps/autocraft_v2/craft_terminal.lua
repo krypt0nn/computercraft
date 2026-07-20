@@ -13,6 +13,9 @@ local MACHINES = {
     },
     macerator = {
         { input = "minecraft:barrel_8", output = "minecraft:barrel_7", slot_usage = 64 }
+    },
+    compressor = {
+        { input = "minecraft:barrel_9", output = "minecraft:barrel_10", slot_usage = 64 }
     }
 }
 
