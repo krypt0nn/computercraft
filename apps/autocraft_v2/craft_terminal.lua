@@ -380,12 +380,26 @@ end
 
 -- Move crafting ingredients to working inventory
 for name, count in pairs(truncated_items) do
-    local moved = working_inventory.pullItem(MASTER_INVENTORY, name, count)
+    local total_moved = 0
 
-    if moved < count then
+    while total_moved < count do
+        local curr_moved = working_inventory.pullItem(
+            MASTER_INVENTORY,
+            name,
+            count - total_moved
+        )
+
+        if curr_moved == 0 then
+            break
+        end
+
+        total_moved = total_moved + curr_moved
+    end
+
+    if total_moved < count then
         move_working_inventory_to_master()
 
-        error("missing resource " .. name .. " x" .. count - moved)
+        error("missing resource " .. name .. " x" .. count - total_moved)
     end
 end
 
