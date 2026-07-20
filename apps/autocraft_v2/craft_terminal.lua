@@ -428,6 +428,10 @@ for i, batch in ipairs(craft_batches) do
                 end
 
                 if curr_executions > 0 then
+                    for _, output in pairs(entry.recipe.outputs.flat) do
+                        print("- " .. output.name .. " x" .. output.count * curr_executions)
+                    end
+
                     for name, input in pairs(entry.recipe.inputs.flat) do
                         working_inventory.pushItem(
                             machine.input,
