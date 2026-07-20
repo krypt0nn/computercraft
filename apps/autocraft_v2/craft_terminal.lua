@@ -289,31 +289,40 @@ function convert_recipe_tree_into_batches(tree)
     return batches
 end
 
----------- user interface ----------
+---------- inventories ----------
 
--- Move items from working to master inventory
 local master_inventory = peripheral.wrap(MASTER_INVENTORY)
 local working_inventory = peripheral.wrap(WORKING_INVENTORY)
 
-for _, item in pairs(working_inventory.items()) do
-    master_inventory.pullItem(WORKING_INVENTORY, item.name, item.count)
-end
-
--- Clear machines inventories
-for _, machines in pairs(MACHINES) do
-    for _, machine in ipairs(machines) do
-        local input_inventory = peripheral.wrap(machine.input)
-        local output_inventory = peripheral.wrap(machine.output)
-
-        for _, item in pairs(input_inventory.list()) do
-            master_inventory.pullItem(machine.input, item.name, item.count)
-        end
-
-        for _, item in pairs(output_inventory.list()) do
-            master_inventory.pullItem(machine.output, item.name, item.count)
+function move_working_inventory_to_master()
+    for _, item in pairs(working_inventory.items()) do
+        if item.name and item.count then
+            master_inventory.pullItem(WORKING_INVENTORY, item.name, item.count)
         end
     end
 end
+
+function move_machines_inventories_to_master()
+    for _, machines in pairs(MACHINES) do
+        for _, machine in ipairs(machines) do
+            local input_inventory = peripheral.wrap(machine.input)
+            local output_inventory = peripheral.wrap(machine.output)
+
+            for _, item in pairs(input_inventory.list()) do
+                master_inventory.pullItem(machine.input, item.name, item.count)
+            end
+
+            for _, item in pairs(output_inventory.list()) do
+                master_inventory.pullItem(machine.output, item.name, item.count)
+            end
+        end
+    end
+end
+
+---------- user interface ----------
+
+move_working_inventory_to_master()
+move_machines_inventories_to_master()
 
 -- User input
 local recipe_name, recipe_quantity = ...
@@ -374,6 +383,8 @@ for name, count in pairs(truncated_items) do
     local moved = working_inventory.pullItem(MASTER_INVENTORY, name, count)
 
     if moved < count then
+        move_working_inventory_to_master()
+
         error("missing resource " .. name .. " x" .. count - moved)
     end
 end
@@ -411,6 +422,8 @@ for name, count in pairs(total_inputs) do
             local moved = working_inventory.pullItem(MASTER_INVENTORY, name, deficit)
 
             if moved < deficit then
+                move_working_inventory_to_master()
+
                 error("missing resource " .. name .. " x" .. deficit - moved)
             end
         end
@@ -538,6 +551,9 @@ for i, batch in ipairs(craft_batches) do
         end
 
         if #round_machines == 0 then
+            move_working_inventory_to_master()
+            move_machines_inventories_to_master()
+
             error("cannot fit any executions in machines")
         end
 
@@ -594,6 +610,9 @@ for i, batch in ipairs(craft_batches) do
             end
 
             if not outputs_ready then
+                move_working_inventory_to_master()
+                move_machines_inventories_to_master()
+
                 error("processing timeout")
             end
         end
@@ -619,25 +638,6 @@ for i, batch in ipairs(craft_batches) do
     end
 end
 
--- Move working inventory items into master inventory
-for _, item in pairs(working_inventory.items()) do
-    if item.name and item.count then
-        master_inventory.pullItem(WORKING_INVENTORY, item.name, item.count)
-    end
-end
-
--- Clear machines inventories
-for _, machines in pairs(MACHINES) do
-    for _, machine in ipairs(machines) do
-        local input_inventory = peripheral.wrap(machine.input)
-        local output_inventory = peripheral.wrap(machine.output)
-
-        for _, item in pairs(input_inventory.list()) do
-            master_inventory.pullItem(machine.input, item.name, item.count)
-        end
-
-        for _, item in pairs(output_inventory.list()) do
-            master_inventory.pullItem(machine.output, item.name, item.count)
-        end
-    end
-end
+-- Move crafting results to master inventory
+move_working_inventory_to_master()
+move_machines_inventories_to_master()
