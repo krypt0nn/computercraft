@@ -22,6 +22,19 @@ while true do
     local sender_id, layout, protocol = rednet.receive()
 
     if layout then
+        -- Copy counts so we can decrement in-place
+        local needs = {}
+
+        for slot, resource in pairs(layout) do
+            if resource then
+                needs[slot] = {
+                    name = resource.name,
+                    count = resource.count,
+                    slot = recipe_to_turtle_slot(slot)
+                }
+            end
+        end
+
         -- Clear turtle inventory
         for slot = 1, 16 do
             local item = turtle.getItemDetail(slot)
@@ -34,9 +47,25 @@ while true do
 
         -- Fill grid from input
         while true do
-            -- Take input resource
+            local done = true
+
+            for _, need in pairs(needs) do
+                if need.count > 0 then
+                    done = false
+
+                    break
+                end
+            end
+
+            if done then
+                break
+            end
+
             turtle.select(16)
-            turtle.suckUp()
+
+            if not turtle.suckUp() then
+                break
+            end
 
             local item = turtle.getItemDetail(16)
 
@@ -44,49 +73,32 @@ while true do
                 break
             end
 
-            local unneeded = true
+            for _, need in pairs(needs) do
+                if need.count > 0 and need.name == item.name then
+                    local give = math.min(item.count, need.count)
 
-            -- Try to find it in the recipe
-            for slot, input in pairs(layout) do
-                if not input.used and input.name == item.name then
-                    -- If we took enough resources - mark resource as taken
-                    -- and move it to the needed slot
-                    if item.count >= input.count then
-                        input.used = true
-                        unneeded = false
+                    turtle.transferTo(need.slot, give)
 
-                        item.count = item.count - input.count
+                    need.count = need.count - give
+                    item.count = item.count - give
 
-                        turtle.transferTo(recipe_to_turtle_slot(slot), input.count)
-
-                        if item.count == 0 then
-                            break
-                        end
+                    if item.count == 0 then
+                        break
                     end
                 end
             end
 
-            -- Return remaining resources to the output storage because we have
-            -- used it in every possible slot
-            if unneeded or item.count > 0 then
-                turtle.drop()
+            if item.count > 0 then
+                turtle.drop(item.count)
             end
+        end
 
-            -- Check if we've finished
-            local finished = true
+        -- Drop anything left in stash
+        local leftover = turtle.getItemDetail(16)
 
-            for _, input in pairs(layout) do
-                if not input.used then
-                    finished = false
-
-                    break
-                end
-            end
-
-            -- Stop resources input if everything's done
-            if finished then
-                break
-            end
+        if leftover then
+            turtle.select(16)
+            turtle.drop(leftover.count)
         end
 
         -- Craft loop

@@ -15,7 +15,8 @@ local MACHINES = {
         { input = "minecraft:barrel_8", output = "minecraft:barrel_7", slot_usage = 64 }
     },
     compressor = {
-        { input = "minecraft:barrel_9", output = "minecraft:barrel_10", slot_usage = 64 }
+        { input = "minecraft:barrel_9",  output = "minecraft:barrel_10", slot_usage = 64 },
+        { input = "minecraft:barrel_15", output = "minecraft:barrel_16", slot_usage = 64 }
     },
     mixer = {
         { input = "minecraft:barrel_11", output = "minecraft:barrel_12", slot_usage = 64 }
@@ -419,146 +420,181 @@ end
 for i, batch in ipairs(craft_batches) do
     print("% batch #" .. i)
 
+    local pending = {}
+
     for _, entry in ipairs(batch) do
-        local machines = MACHINES[entry.recipe.machine]
+        pending[entry] = entry.executions
+    end
 
-        -- Push input resources to machines and await their processing
-        local remaining_executions = entry.executions
+    while true do
+        -- Clear machines inventories for all pending entries
+        for _, entry in ipairs(batch) do
+            if pending[entry] > 0 then
+                for _, machine in ipairs(MACHINES[entry.recipe.machine]) do
+                    local input_inventory = peripheral.wrap(machine.input)
+                    local output_inventory = peripheral.wrap(machine.output)
 
-        while true do
-            local round_executions = 0
+                    for _, item in pairs(input_inventory.list()) do
+                        working_inventory.pullItem(machine.input, item.name, item.count)
+                    end
 
-            -- Clear machines inventories
-            for _, machine in ipairs(machines) do
-                local input_inventory = peripheral.wrap(machine.input)
-                local output_inventory = peripheral.wrap(machine.output)
-
-                for _, item in pairs(input_inventory.list()) do
-                    working_inventory.pullItem(machine.input, item.name, item.count)
-                end
-
-                for _, item in pairs(output_inventory.list()) do
-                    working_inventory.pullItem(machine.output, item.name, item.count)
+                    for _, item in pairs(output_inventory.list()) do
+                        working_inventory.pullItem(machine.output, item.name, item.count)
+                    end
                 end
             end
+        end
 
-            -- Stop loop executions *after* clearing machines' inventories
-            if remaining_executions < 1 then
+        -- Check if there's any executions pending
+        local any_pending = false
+
+        for _, entry in ipairs(batch) do
+            if pending[entry] > 0 then
+                any_pending = true
+
                 break
             end
+        end
 
-            -- Fill machines inputs
-            for _, machine in ipairs(machines) do
-                local curr_executions = remaining_executions
+        if not any_pending then
+            break
+        end
 
-                for _, input in pairs(entry.recipe.inputs.flat) do
-                    curr_executions = math.min(
-                        curr_executions,
-                        math.floor(machine.slot_usage / input.count)
-                    )
-                end
+        -- Fill machines for all pending entries
+        local round_machines = {}
+        local round_entry_execs = {}
+        local claimed = {}
 
-                if curr_executions > 0 then
-                    for _, output in pairs(entry.recipe.outputs.flat) do
-                        print("- " .. output.name .. " x" .. math.floor(output.count * curr_executions))
-                    end
-
-                    for name, input in pairs(entry.recipe.inputs.flat) do
-                        working_inventory.pushItem(
-                            machine.input,
-                            name,
-                            input.count * curr_executions
-                        )
-                    end
-
-                    local layout = {}
-
-                    for slot, resource in pairs(entry.recipe.inputs.layout) do
-                        if resource then
-                            layout[slot] = {
-                                name = resource.name,
-                                count = resource.count * curr_executions
-                            }
-                        end
-                    end
-
-                    machine.layout = layout
-
-                    round_executions = round_executions + curr_executions
-                    remaining_executions = remaining_executions - curr_executions
-                end
-
-                if remaining_executions <= 0 then
-                    break
-                end
-            end
-
-            if round_executions < 1 then
-                error("cannot fit any executions in machines")
-            end
-
-            -- Wait for machines to finish
-            if entry.recipe.machine == "crafter" then
-                local reply_count = 0
+        for _, entry in ipairs(batch) do
+            if pending[entry] > 0 then
+                local machines = MACHINES[entry.recipe.machine]
+                local remaining = pending[entry]
 
                 for _, machine in ipairs(machines) do
-                    if machine.layout then
-                        rednet.send(machine.id, machine.layout)
+                    if not claimed[machine] then
+                        local curr_executions = remaining
 
-                        machine.layout = nil
-
-                        reply_count = reply_count + 1
-                    end
-                end
-
-                while reply_count > 0 do
-                    local _, _ = rednet.receive(MACHINES_TIMEOUT)
-
-                    reply_count = reply_count - 1
-                end
-            else
-                local round_expected = {}
-
-                for name, output in pairs(entry.recipe.outputs.flat) do
-                    round_expected[name] = math.floor(output.count * round_executions)
-                end
-
-                local waited_seconds = 0
-                local outputs_ready = false
-
-                while waited_seconds < MACHINES_TIMEOUT do
-                    local current = {}
-
-                    for _, machine in ipairs(machines) do
-                        local inventory = peripheral.wrap(machine.output)
-
-                        for _, item in pairs(inventory.list()) do
-                            current[item.name] = (current[item.name] or 0) + item.count
+                        for _, input in pairs(entry.recipe.inputs.flat) do
+                            curr_executions = math.min(
+                                curr_executions,
+                                math.floor(machine.slot_usage / input.count)
+                            )
                         end
-                    end
 
-                    outputs_ready = true
+                        if curr_executions > 0 then
+                            for _, output in pairs(entry.recipe.outputs.flat) do
+                                print("- " .. output.name .. " x" .. math.floor(output.count * curr_executions))
+                            end
 
-                    for name, need in pairs(round_expected) do
-                        if (current[name] or 0) < need then
-                            outputs_ready = false
+                            for name, input in pairs(entry.recipe.inputs.flat) do
+                                working_inventory.pushItem(
+                                    machine.input,
+                                    name,
+                                    input.count * curr_executions
+                                )
+                            end
 
+                            local layout = {}
+
+                            for slot, resource in pairs(entry.recipe.inputs.layout) do
+                                if resource then
+                                    layout[slot] = {
+                                        name = resource.name,
+                                        count = resource.count * curr_executions
+                                    }
+                                end
+                            end
+
+                            machine.layout = layout
+
+                            claimed[machine] = true
+
+                            table.insert(round_machines, machine)
+
+                            remaining = remaining - curr_executions
+
+                            pending[entry] = pending[entry] - curr_executions
+                            round_entry_execs[entry] = (round_entry_execs[entry] or 0) + curr_executions
+                        end
+
+                        if remaining <= 0 then
                             break
                         end
                     end
+                end
+            end
+        end
 
-                    if outputs_ready then
+        if #round_machines == 0 then
+            error("cannot fit any executions in machines")
+        end
+
+        -- Wait for crafter machines (send to all, then wait for replies)
+        local reply_count = 0
+
+        for _, machine in ipairs(round_machines) do
+            if machine.layout and machine.id then
+                rednet.send(machine.id, machine.layout)
+
+                machine.layout = nil
+
+                reply_count = reply_count + 1
+            end
+        end
+
+        while reply_count > 0 do
+            local _, _ = rednet.receive(MACHINES_TIMEOUT)
+
+            reply_count = reply_count - 1
+        end
+
+        -- Wait for auto (non-crafter) machines
+        local round_expected = {}
+
+        for entry, execs in pairs(round_entry_execs) do
+            if entry.recipe.machine ~= "crafter" then
+                for name, output in pairs(entry.recipe.outputs.flat) do
+                    round_expected[name] = (round_expected[name] or 0) + math.floor(output.count * execs)
+                end
+            end
+        end
+
+        if next(round_expected) then
+            local waited_seconds = 0
+            local outputs_ready = false
+
+            while waited_seconds < MACHINES_TIMEOUT do
+                local current = {}
+
+                for _, machine in ipairs(round_machines) do
+                    local inventory = peripheral.wrap(machine.output)
+
+                    for _, item in pairs(inventory.list()) do
+                        current[item.name] = (current[item.name] or 0) + item.count
+                    end
+                end
+
+                outputs_ready = true
+
+                for name, need in pairs(round_expected) do
+                    if (current[name] or 0) < need then
+                        outputs_ready = false
+
                         break
                     end
-
-                    os.sleep(1)
-
-                    waited_seconds = waited_seconds + 1
                 end
 
-                if not outputs_ready then
-                    error("processing timeout")
+                if outputs_ready then
+                    break
                 end
+
+                os.sleep(1)
+
+                waited_seconds = waited_seconds + 1
+            end
+
+            if not outputs_ready then
+                error("processing timeout")
             end
         end
     end
