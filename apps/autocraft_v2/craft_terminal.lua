@@ -10,10 +10,12 @@ local MACHINES = {
         { input = "minecraft:barrel_17", output = "minecraft:barrel_18", id = 2, slot_usage = 64 }
     },
     furnace = {
-        { input = "minecraft:barrel_6", output = "minecraft:barrel_5", slot_usage = 64 }
+        { input = "minecraft:barrel_6",  output = "minecraft:barrel_5",  slot_usage = 64 },
+        { input = "minecraft:barrel_19", output = "minecraft:barrel_20", slot_usage = 64 }
     },
     macerator = {
-        { input = "minecraft:barrel_8", output = "minecraft:barrel_7", slot_usage = 64 }
+        { input = "minecraft:barrel_8",  output = "minecraft:barrel_7",  slot_usage = 64 },
+        { input = "minecraft:barrel_21", output = "minecraft:barrel_22", slot_usage = 64 }
     },
     compressor = {
         { input = "minecraft:barrel_9",  output = "minecraft:barrel_10", slot_usage = 64 },
