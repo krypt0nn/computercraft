@@ -5,6 +5,6 @@ return {
         { name = "modern_industrialization:copper_dust", count = 3 }
     },
     outputs = {
-        { name  = "modern_industrialization:bronze_ingot", count = 4 }
+        { name  = "modern_industrialization:bronze_dust", count = 4 }
     }
 }
