@@ -16,6 +16,12 @@ local MACHINES = {
     },
     compressor = {
         { input = "minecraft:barrel_9", output = "minecraft:barrel_10", slot_usage = 64 }
+    },
+    mixer = {
+        { input = "minecraft:barrel_11", output = "minecraft:barrel_12", slot_usage = 64 }
+    },
+    cutter = {
+        { input = "minecraft:barrel_13", output = "minecraft:barrel_14", slot_usage = 64 }
     }
 }
 
