@@ -4,6 +4,7 @@ return {
         { name = "minecraft:raw_copper", count = 1 }
     },
     outputs = {
-        { name  = "modern_industrialization:copper_dust", count = 1.5 }
+        -- real chance is 1.5 but we use lower value for guaranteed result
+        { name  = "modern_industrialization:copper_dust", count = 1.2 }
     }
 }

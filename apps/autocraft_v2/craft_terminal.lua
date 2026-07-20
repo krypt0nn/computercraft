@@ -186,7 +186,7 @@ function truncate_recipe_tree(tree)
                 if reduction > 0 then
                     node.executions = node.executions - reduction
 
-                    local amount = reduction * output.count
+                    local amount = math.floor(reduction * output.count)
 
                     available_items[output.name] = available - amount
                     truncated_items[output.name] = (truncated_items[output.name] or 0) + amount
@@ -288,6 +288,22 @@ for _, item in pairs(working_inventory.items()) do
     master_inventory.pullItem(WORKING_INVENTORY, item.name, item.count)
 end
 
+-- Clear machines inventories
+for _, machines in pairs(MACHINES) do
+    for _, machine in ipairs(machines) do
+        local input_inventory = peripheral.wrap(machine.input)
+        local output_inventory = peripheral.wrap(machine.output)
+
+        for _, item in pairs(input_inventory.list()) do
+            master_inventory.pullItem(machine.input, item.name, item.count)
+        end
+
+        for _, item in pairs(output_inventory.list()) do
+            master_inventory.pullItem(machine.output, item.name, item.count)
+        end
+    end
+end
+
 -- User input
 local recipe_name, recipe_quantity = ...
 
@@ -326,7 +342,7 @@ for i, batch in ipairs(craft_batches) do
 
     for _, entry in ipairs(batch) do
         for _, output in pairs(entry.recipe.outputs.flat) do
-            print(" - " .. output.name .. "  x" .. output.count * entry.executions)
+            print("- " .. output.name .. " x" .. math.floor(output.count * entry.executions))
         end
     end
 end
@@ -379,6 +395,8 @@ for name, count in pairs(total_inputs) do
         end
 
         if deficit > 0 then
+            deficit = math.ceil(deficit)
+
             local moved = working_inventory.pullItem(MASTER_INVENTORY, name, deficit)
 
             if moved < deficit then
@@ -433,7 +451,7 @@ for i, batch in ipairs(craft_batches) do
 
                 if curr_executions > 0 then
                     for _, output in pairs(entry.recipe.outputs.flat) do
-                        print("- " .. output.name .. " x" .. output.count * curr_executions)
+                        print("- " .. output.name .. " x" .. math.floor(output.count * curr_executions))
                     end
 
                     for name, input in pairs(entry.recipe.inputs.flat) do
@@ -493,7 +511,7 @@ for i, batch in ipairs(craft_batches) do
                 local round_expected = {}
 
                 for name, output in pairs(entry.recipe.outputs.flat) do
-                    round_expected[name] = output.count * round_executions
+                    round_expected[name] = math.floor(output.count * round_executions)
                 end
 
                 local waited_seconds = 0
@@ -541,5 +559,21 @@ end
 for _, item in pairs(working_inventory.items()) do
     if item.name and item.count then
         master_inventory.pullItem(WORKING_INVENTORY, item.name, item.count)
+    end
+end
+
+-- Clear machines inventories
+for _, machines in pairs(MACHINES) do
+    for _, machine in ipairs(machines) do
+        local input_inventory = peripheral.wrap(machine.input)
+        local output_inventory = peripheral.wrap(machine.output)
+
+        for _, item in pairs(input_inventory.list()) do
+            master_inventory.pullItem(machine.input, item.name, item.count)
+        end
+
+        for _, item in pairs(output_inventory.list()) do
+            master_inventory.pullItem(machine.output, item.name, item.count)
+        end
     end
 end
