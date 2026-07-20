@@ -1,15 +1,19 @@
 local REDNET_MODEM_SIDE = "top"
-local MASTER_INVENTORY  = "toms_storage:ts.inventory_connector_0"
-local WORKING_INVENTORY = "toms_storage:ts.inventory_connector_2"
+local MASTER_INVENTORY  = "toms_storage:ts.inventory_connector_3"
+local WORKING_INVENTORY = "toms_storage:ts.inventory_connector_4"
+
+local MACHINES_TIMEOUT = 600
 
 local MACHINES = {
     crafter = {
-        { input = "minecraft:barrel_2", output = "minecraft:barrel_1", id = 1, slot_usage = 64 }
+        { input = "minecraft:barrel_4", output = "minecraft:barrel_3", id = 1, slot_usage = 64 }
     },
-    -- furnace = {
-    --     { input = "minecraft:barrel_1", output = "minecraft:barrel_2", slot_usage = 64 },
-    --     { input = "minecraft:barrel_1", output = "minecraft:barrel_2", slot_usage = 64 }
-    -- }
+    furnace = {
+        { input = "minecraft:barrel_6", output = "minecraft:barrel_5", slot_usage = 64 }
+    },
+    macerator = {
+        { input = "minecraft:barrel_8", output = "minecraft:barrel_7", slot_usage = 64 }
+    }
 }
 
 rednet.open(REDNET_MODEM_SIDE)
@@ -481,7 +485,7 @@ for i, batch in ipairs(craft_batches) do
                 end
 
                 while reply_count > 0 do
-                    local _, _ = rednet.receive(120)
+                    local _, _ = rednet.receive(MACHINES_TIMEOUT)
 
                     reply_count = reply_count - 1
                 end
@@ -495,7 +499,7 @@ for i, batch in ipairs(craft_batches) do
                 local waited_seconds = 0
                 local outputs_ready = false
 
-                while waited_seconds < 120 do
+                while waited_seconds < MACHINES_TIMEOUT do
                     local current = {}
 
                     for _, machine in ipairs(machines) do
