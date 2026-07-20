@@ -31,7 +31,7 @@ rednet.open(REDNET_MODEM_SIDE)
 
 ---------- recipes parsing ----------
 
-function build_recipe(machine, inputs, outputs)
+local function build_recipe(machine, inputs, outputs)
     if type(machine) ~= "string" then
         error("build_recipe: machine name is not a string")
     end
@@ -127,7 +127,7 @@ end
 
 ---------- auto-craft engine ----------
 
-function build_recipe_tree(resource, quantity, recipes)
+local function build_recipe_tree(resource, quantity, recipes)
     if not resource or type(resource) ~= "string" then
         error("build_recipe_tree: resource is not a string")
     end
@@ -170,7 +170,7 @@ function build_recipe_tree(resource, quantity, recipes)
     return nil
 end
 
-function truncate_recipe_tree(tree)
+local function truncate_recipe_tree(tree)
     local available_items = {}
     local truncated_items = {}
 
@@ -228,7 +228,7 @@ function truncate_recipe_tree(tree)
     return tree, truncated_items
 end
 
-function convert_recipe_tree_into_batches(tree)
+local function convert_recipe_tree_into_batches(tree)
     local batches = {}
     local resolved = {}
 
@@ -294,7 +294,7 @@ end
 local master_inventory = peripheral.wrap(MASTER_INVENTORY)
 local working_inventory = peripheral.wrap(WORKING_INVENTORY)
 
-function move_working_inventory_to_master()
+local function move_working_inventory_to_master()
     for _, item in pairs(working_inventory.items()) do
         if item.name and item.count then
             master_inventory.pullItem(WORKING_INVENTORY, item.name, item.count)
@@ -302,7 +302,7 @@ function move_working_inventory_to_master()
     end
 end
 
-function move_machines_inventories_to_master()
+local function move_machines_inventories_to_master()
     for _, machines in pairs(MACHINES) do
         for _, machine in ipairs(machines) do
             local input_inventory = peripheral.wrap(machine.input)
