@@ -6,7 +6,8 @@ local MACHINES_TIMEOUT = 600
 
 local MACHINES = {
     crafter = {
-        { input = "minecraft:barrel_4", output = "minecraft:barrel_3", id = 1, slot_usage = 64 }
+        { input = "minecraft:barrel_4",  output = "minecraft:barrel_3",  id = 1, slot_usage = 64 },
+        { input = "minecraft:barrel_17", output = "minecraft:barrel_18", id = 2, slot_usage = 64 }
     },
     furnace = {
         { input = "minecraft:barrel_6", output = "minecraft:barrel_5", slot_usage = 64 }
