@@ -427,19 +427,30 @@ for i, batch in ipairs(craft_batches) do
     end
 
     while true do
-        -- Clear machines inventories for all pending entries
+        -- Clear all machines in this batch
         for _, entry in ipairs(batch) do
-            if pending[entry] > 0 then
-                for _, machine in ipairs(MACHINES[entry.recipe.machine]) do
+            for _, machine in ipairs(MACHINES[entry.recipe.machine]) do
+                -- Loop until barrel is fully cleared
+                while true do
                     local input_inventory = peripheral.wrap(machine.input)
-                    local output_inventory = peripheral.wrap(machine.output)
+                    local found_item = false
 
                     for _, item in pairs(input_inventory.list()) do
                         working_inventory.pullItem(machine.input, item.name, item.count)
+
+                        found_item = true
                     end
+
+                    local output_inventory = peripheral.wrap(machine.output)
 
                     for _, item in pairs(output_inventory.list()) do
                         working_inventory.pullItem(machine.output, item.name, item.count)
+
+                        found_item = true
+                    end
+
+                    if not found_item then
+                        break
                     end
                 end
             end
@@ -529,44 +540,32 @@ for i, batch in ipairs(craft_batches) do
             error("cannot fit any executions in machines")
         end
 
-        -- Wait for crafter machines (send to all, then wait for replies)
-        local reply_count = 0
-
-        for _, machine in ipairs(round_machines) do
-            if machine.layout and machine.id then
-                rednet.send(machine.id, machine.layout)
-
-                machine.layout = nil
-
-                reply_count = reply_count + 1
-            end
-        end
-
-        while reply_count > 0 do
-            local _, _ = rednet.receive(MACHINES_TIMEOUT)
-
-            reply_count = reply_count - 1
-        end
-
-        -- Wait for auto (non-crafter) machines
-        local round_expected = {}
+        -- Process auto (non-crafter) machines: wait for outputs
+        local auto_machines = {}
+        local auto_expected = {}
 
         for entry, execs in pairs(round_entry_execs) do
             if entry.recipe.machine ~= "crafter" then
                 for name, output in pairs(entry.recipe.outputs.flat) do
-                    round_expected[name] = (round_expected[name] or 0) + math.floor(output.count * execs)
+                    auto_expected[name] = (auto_expected[name] or 0) + math.floor(output.count * execs)
                 end
             end
         end
 
-        if next(round_expected) then
+        for _, machine in ipairs(round_machines) do
+            if not machine.id then
+                table.insert(auto_machines, machine)
+            end
+        end
+
+        if next(auto_expected) then
             local waited_seconds = 0
             local outputs_ready = false
 
             while waited_seconds < MACHINES_TIMEOUT do
                 local current = {}
 
-                for _, machine in ipairs(round_machines) do
+                for _, machine in ipairs(auto_machines) do
                     local inventory = peripheral.wrap(machine.output)
 
                     for _, item in pairs(inventory.list()) do
@@ -576,7 +575,7 @@ for i, batch in ipairs(craft_batches) do
 
                 outputs_ready = true
 
-                for name, need in pairs(round_expected) do
+                for name, need in pairs(auto_expected) do
                     if (current[name] or 0) < need then
                         outputs_ready = false
 
@@ -596,6 +595,25 @@ for i, batch in ipairs(craft_batches) do
             if not outputs_ready then
                 error("processing timeout")
             end
+        end
+
+        -- Process crafter machines (send layout, wait for reply)
+        local reply_count = 0
+
+        for _, machine in ipairs(round_machines) do
+            if machine.layout and machine.id then
+                rednet.send(machine.id, machine.layout)
+
+                machine.layout = nil
+
+                reply_count = reply_count + 1
+            end
+        end
+
+        while reply_count > 0 do
+            rednet.receive(MACHINES_TIMEOUT)
+
+            reply_count = reply_count - 1
         end
     end
 end
