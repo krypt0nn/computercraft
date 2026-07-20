@@ -4,19 +4,18 @@ local WORKING_INVENTORY = "toms_storage:ts.inventory_connector_2"
 
 local MACHINES = {
     crafter = {
-        { input = "minecraft:barrel_1", output = "minecraft:barrel_2" }
+        { input = "minecraft:barrel_2", output = "minecraft:barrel_1", id = 1, slot_usage = 64 }
     },
-    furnace = {
-        { input = "minecraft:barrel_1", output = "minecraft:barrel_2" },
-        { input = "minecraft:barrel_1", output = "minecraft:barrel_2" }
-    }
+    -- furnace = {
+    --     { input = "minecraft:barrel_1", output = "minecraft:barrel_2", slot_usage = 64 },
+    --     { input = "minecraft:barrel_1", output = "minecraft:barrel_2", slot_usage = 64 }
+    -- }
 }
+
+rednet.open(REDNET_MODEM_SIDE)
 
 ---------- recipes parsing ----------
 
--- [1] [2] [3]
--- [4] [5] [6]
--- [7] [8] [9]
 function build_recipe(machine, inputs, outputs)
     if type(machine) ~= "string" then
         error("build_recipe: machine name is not a string")
@@ -270,129 +269,234 @@ end
 
 ---------- user interface ----------
 
-while true do
-    -- Move items from working to master inventory
-    local master_inventory = peripheral.wrap(MASTER_INVENTORY)
-    local working_inventory = peripheral.wrap(WORKING_INVENTORY)
+-- Move items from working to master inventory
+local master_inventory = peripheral.wrap(MASTER_INVENTORY)
+local working_inventory = peripheral.wrap(WORKING_INVENTORY)
 
-    for _, item in pairs(working_inventory.items()) do
-        master_inventory.pullItem(WORKING_INVENTORY, item.name, item.count)
+for _, item in pairs(working_inventory.items()) do
+    master_inventory.pullItem(WORKING_INVENTORY, item.name, item.count)
+end
+
+-- User input
+local recipe_name, recipe_quantity = ...
+
+if not recipe_name then
+    error("no recipe provided")
+end
+
+if not recipe_quantity or recipe_quantity == "" then
+    recipe_quantity = 1
+else
+    recipe_quantity = tonumber(recipe_quantity)
+end
+
+-- Load recipes
+local recipes = load_recipes()
+
+-- Build crafting tree
+local recipe_tree = build_recipe_tree(
+    recipe_name,
+    recipe_quantity,
+    recipes
+)
+
+if not recipe_tree then
+    error("missing crafting recipe")
+end
+
+-- Remove already available items from the crafting tree
+local recipe_tree, truncated_items = truncate_recipe_tree(recipe_tree)
+
+-- Prepare batches from the crafting tree
+local craft_batches = convert_recipe_tree_into_batches(recipe_tree)
+
+for i, batch in ipairs(craft_batches) do
+    print("batch #" .. i .. " outputs:")
+
+    for _, entry in ipairs(batch) do
+        for _, output in pairs(entry.recipe.outputs.flat) do
+            print(" - " .. output.name .. "  x" .. output.count * entry.executions)
+        end
+    end
+end
+
+print()
+
+-- Validate machines presence
+for _, batch in ipairs(craft_batches) do
+    for _, entry in ipairs(batch) do
+        if not MACHINES[entry.recipe.machine] then
+            error("missing machine " .. entry.recipe.machine)
+        end
+    end
+end
+
+-- Move crafting ingredients to working inventory
+for name, count in pairs(truncated_items) do
+    local moved = working_inventory.pullItem(MASTER_INVENTORY, name, count)
+
+    if moved < count then
+        error("missing resource " .. name .. " x" .. count - moved)
+    end
+end
+
+for _, batch in ipairs(craft_batches) do
+    local inputs_needed = {}
+
+    for _, entry in ipairs(batch) do
+        for name, input in pairs(entry.recipe.inputs.flat) do
+            inputs_needed[name] = (inputs_needed[name] or 0) + input.count * entry.executions
+        end
     end
 
-    -- Prompt crafting recipe and quantity
-    print()
+    for _, item in pairs(working_inventory.items()) do
+        local needed = inputs_needed[item.name]
 
-    io.write("$ ")
-
-    local recipe_name, recipe_quantity = string.match(io.read(), "^(%S+)%s*(.*)$")
-
-    print()
-
-    -- Read craft name
-    if not recipe_name then
-        print("invalid name")
-    else
-        -- Read craft quantity
-        if not recipe_quantity or recipe_quantity == "" then
-            recipe_quantity = 1
-        else
-            recipe_quantity = tonumber(recipe_quantity)
+        if needed then
+            inputs_needed[item.name] = math.max(0, needed - item.count)
         end
+    end
 
-        if not recipe_quantity or recipe_quantity < 1 then
-            print("invalid quantity")
-        else
-            -- Load recipes
-            local recipes = load_recipes()
+    for name, deficit in pairs(inputs_needed) do
+        if deficit > 0 then
+            local moved = working_inventory.pullItem(MASTER_INVENTORY, name, deficit)
 
-            -- Build crafting tree
-            local recipe_tree = build_recipe_tree(
-                recipe_name,
-                recipe_quantity,
-                recipes
-            )
+            if moved < deficit then
+                error("missing resource " .. name .. " x" .. deficit - moved)
+            end
+        end
+    end
+end
 
-            if not recipe_tree then
-                print("recipe is missing")
-            else
-                -- Remove already available items from the crafting tree
-                local recipe_tree, truncated_items = truncate_recipe_tree(recipe_tree)
+-- Execute batches after moving input resources
+for i, batch in ipairs(craft_batches) do
+    print("% batch #" .. i)
 
-                -- Prepare batches from the crafting tree
-                local craft_batches = convert_recipe_tree_into_batches(recipe_tree)
+    for _, entry in ipairs(batch) do
+        local machines = MACHINES[entry.recipe.machine]
 
-                for i, batch in ipairs(craft_batches) do
-                    print("batch " .. i .. " outputs:")
+        -- Push input resources to machines and await their processing
+        local remaining_executions = entry.executions
 
-                    for _, entry in ipairs(batch) do
-                        for _, output in pairs(entry.recipe.outputs.flat) do
-                            print(" - " .. output.name .. "  x" .. output.count * entry.executions)
-                        end
-                    end
+        while true do
+            local round_executions = 0
+
+            -- Clear machines inventories
+            for _, machine in ipairs(machines) do
+                local input_inventory = peripheral.wrap(machine.input)
+                local output_inventory = peripheral.wrap(machine.output)
+
+                for slot, item in pairs(input_inventory.items()) do
+                    input_inventory.pushItems(WORKING_INVENTORY, slot, item.count)
                 end
 
-                -- Move crafting ingredients to working inventory
-                local can_craft = true
-
-                for name, count in pairs(truncated_items) do
-                    local moved = working_inventory.pullItem(
-                        MASTER_INVENTORY,
-                        name,
-                        count
-                    )
-
-                    if moved < count then
-                        print("missing " .. name .. " x" .. count - moved)
-
-                        can_craft = false
-
-                        break
-                    end
-                end
-
-                if can_craft then
-                    for _, batch in ipairs(craft_batches) do
-                        if not can_craft then
-                            break
-                        end
-
-                        local inputs_needed = {}
-
-                        for _, entry in ipairs(batch) do
-                            for name, input in pairs(entry.recipe.inputs.flat) do
-                                inputs_needed[name] = (inputs_needed[name] or 0) + input.count * entry.executions
-                            end
-                        end
-
-                        for _, item in pairs(working_inventory.items()) do
-                            local needed = inputs_needed[item.name]
-
-                            if needed then
-                                inputs_needed[item.name] = math.max(0, needed - item.count)
-                            end
-                        end
-
-                        for name, deficit in pairs(inputs_needed) do
-                            if deficit > 0 then
-                                local moved = working_inventory.pullItem(MASTER_INVENTORY, name, deficit)
-
-                                if moved < deficit then
-                                    print("missing " .. name .. " x" .. deficit - moved)
-
-                                    can_craft = false
-
-                                    break
-                                end
-                            end
-                        end
-
-                        -- Execute batches
-                        if can_craft then
-                            return
-                        end
-                    end
+                for slot, item in pairs(output_inventory.items()) do
+                    output_inventory.pushItems(WORKING_INVENTORY, slot, item.count)
                 end
             end
+
+            -- Stop loop executions *after* clearing machines' inventories
+            if remaining_executions < 1 then
+                break
+            end
+
+            -- Fill machines inputs
+            for _, machine in ipairs(machines) do
+                local curr_executions = remaining_executions
+
+                for _, input in pairs(entry.recipe.inputs.flat) do
+                    curr_executions = math.min(
+                        curr_executions,
+                        math.floor(machine.slot_usage / input.count)
+                    )
+                end
+
+                if curr_executions > 0 then
+                    for name, input in pairs(entry.recipe.inputs.flat) do
+                        peripheral.wrap(machine.input).pullItem(
+                            WORKING_INVENTORY,
+                            name,
+                            input.count * curr_executions
+                        )
+                    end
+
+                    round_executions = round_executions + curr_executions
+                    remaining_executions = remaining_executions - curr_executions
+                end
+
+                if remaining_executions <= 0 then
+                    break
+                end
+            end
+
+            if round_executions < 1 then
+                error("cannot fit any executions in machines")
+            end
+
+            -- Wait for machines to finish
+            if entry.recipe.machine == "crafter" then
+                for _, machine in ipairs(machines) do
+                    rednet.send(machine.id, entry.recipe)
+                end
+
+                local reply_count = #machines
+
+                while reply_count > 0 do
+                    local _, reply = rednet.receive(120)
+
+                    if not reply or not reply.success then
+                        error("crafters error: " .. (reply and reply.error or "timeout"))
+                    end
+
+                    reply_count = reply_count - 1
+                end
+            else
+                local round_expected = {}
+
+                for name, output in pairs(entry.recipe.outputs.flat) do
+                    round_expected[name] = output.count * round_executions
+                end
+
+                local waited_seconds = 0
+                local outputs_ready = false
+
+                while waited_seconds < 120 do
+                    local current = {}
+
+                    for _, machine in ipairs(machines) do
+                        local inventory = peripheral.wrap(machine.output)
+
+                        if inventory then
+                            for _, item in pairs(inventory.items()) do
+                                current[item.name] = (current[item.name] or 0) + item.count
+                            end
+                        end
+                    end
+
+                    outputs_ready = true
+
+                    for name, need in pairs(round_expected) do
+                        if (current[name] or 0) < need then
+                            outputs_ready = false
+
+                            break
+                        end
+                    end
+
+                    if outputs_ready then
+                        break
+                    end
+
+                    os.sleep(1)
+
+                    waited_seconds = waited_seconds + 1
+                end
+
+                if not outputs_ready then
+                    error("processing timeout")
+                end
+            end
+
         end
     end
 end
