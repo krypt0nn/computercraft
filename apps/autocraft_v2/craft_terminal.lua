@@ -1,6 +1,6 @@
 local REDNET_MODEM_SIDE = "top"
-local MASTER_INVENTORY  = "toms_storage:ts.inventory_connector_3"
-local WORKING_INVENTORY = "toms_storage:ts.inventory_connector_4"
+local MASTER_INVENTORY  = "toms_storage:ts.inventory_connector_5"
+local WORKING_INVENTORY = "toms_storage:ts.inventory_connector_6"
 
 local MACHINES_TIMEOUT = 600
 
