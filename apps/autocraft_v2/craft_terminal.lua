@@ -519,72 +519,155 @@ for i, batch in ipairs(craft_batches) do
         -- Fill machines for all pending entries
         local round_machines = {}
         local round_entry_execs = {}
-        local claimed = {}
+
+        -- Group pending entries by machine type
+        local machine_type_entries = {}
 
         for _, entry in ipairs(batch) do
             if pending[entry] > 0 then
-                local machines = MACHINES[entry.recipe.machine]
-                local remaining = pending[entry]
+                local machine = entry.recipe.machine
 
-                for _, machine in ipairs(machines) do
-                    if not claimed[machine] then
-                        local curr_executions = remaining
+                if not machine_type_entries[machine] then
+                    machine_type_entries[machine] = {}
+                end
 
-                        for _, input in pairs(entry.recipe.inputs.flat) do
-                            curr_executions = math.min(
-                                curr_executions,
-                                math.floor(machine.slot_usage / input.count)
-                            )
-                        end
+                table.insert(machine_type_entries[machine], entry)
+            end
+        end
 
+        for machine, entries in pairs(machine_type_entries) do
+            local machines = MACHINES[machine]
+            local remaining = {}
+
+            for _, entry in ipairs(entries) do
+                remaining[entry] = pending[entry]
+            end
+
+            -- Single recipe: parallelize across all machines
+            if #entries == 1 then
+                local entry = entries[1]
+                local machine_count = #machines
+
+                for idx, machine in ipairs(machines) do
+                    if remaining[entry] <= 0 then
+                        break
+                    end
+
+                    local machines_left = machine_count - idx + 1
+                    local curr_executions = math.ceil(remaining[entry] / machines_left)
+
+                    for _, input in pairs(entry.recipe.inputs.flat) do
+                        curr_executions = math.min(
+                            curr_executions,
+                            math.floor(machine.slot_usage / input.count)
+                        )
+                    end
+
+                    for _, output in pairs(entry.recipe.outputs.flat) do
+                        curr_executions = math.min(
+                            curr_executions,
+                            math.floor(machine.slot_usage / output.count)
+                        )
+                    end
+
+                    if curr_executions > 0 then
                         for _, output in pairs(entry.recipe.outputs.flat) do
-                            curr_executions = math.min(
-                                curr_executions,
-                                math.floor(machine.slot_usage / output.count)
+                            print("- " .. output.name .. " x" .. math.floor(output.count * curr_executions))
+                        end
+
+                        for name, input in pairs(entry.recipe.inputs.flat) do
+                            working_inventory.pushItem(
+                                machine.input,
+                                name,
+                                input.count * curr_executions
                             )
                         end
 
-                        if curr_executions > 0 then
-                            for _, output in pairs(entry.recipe.outputs.flat) do
-                                print("- " .. output.name .. " x" .. math.floor(output.count * curr_executions))
+                        machine.layout = {}
+
+                        for slot, resource in pairs(entry.recipe.inputs.layout) do
+                            if resource then
+                                machine.layout[slot] = {
+                                    name = resource.name,
+                                    count = resource.count * curr_executions,
+                                }
                             end
-
-                            for name, input in pairs(entry.recipe.inputs.flat) do
-                                working_inventory.pushItem(
-                                    machine.input,
-                                    name,
-                                    input.count * curr_executions
-                                )
-                            end
-
-                            local layout = {}
-
-                            for slot, resource in pairs(entry.recipe.inputs.layout) do
-                                if resource then
-                                    layout[slot] = {
-                                        name = resource.name,
-                                        count = resource.count * curr_executions
-                                    }
-                                end
-                            end
-
-                            machine.layout = layout
-
-                            claimed[machine] = true
-
-                            table.insert(round_machines, machine)
-
-                            remaining = remaining - curr_executions
-
-                            pending[entry] = pending[entry] - curr_executions
-                            round_entry_execs[entry] = (round_entry_execs[entry] or 0) + curr_executions
                         end
 
-                        if remaining <= 0 then
+                        table.insert(round_machines, machine)
+
+                        round_entry_execs[entry] = (round_entry_execs[entry] or 0) + curr_executions
+                        remaining[entry] = remaining[entry] - curr_executions
+                    end
+                end
+
+            -- Multiple recipes: one machine per entry round-robin
+            else
+                for _, machine in ipairs(machines) do
+                    local entry = nil
+
+                    for _, curr_entry in ipairs(entries) do
+                        if remaining[curr_entry] > 0 then
+                            entry = curr_entry
+
                             break
                         end
                     end
+
+                    if not entry then
+                        break
+                    end
+
+                    local curr_executions = remaining[entry]
+
+                    for _, input in pairs(entry.recipe.inputs.flat) do
+                        curr_executions = math.min(
+                            curr_executions,
+                            math.floor(machine.slot_usage / input.count)
+                        )
+                    end
+
+                    for _, output in pairs(entry.recipe.outputs.flat) do
+                        curr_executions = math.min(
+                            curr_executions,
+                            math.floor(machine.slot_usage / output.count)
+                        )
+                    end
+
+                    if curr_executions > 0 then
+                        for _, output in pairs(entry.recipe.outputs.flat) do
+                            print("- " .. output.name .. " x" .. math.floor(output.count * curr_executions))
+                        end
+
+                        for name, input in pairs(entry.recipe.inputs.flat) do
+                            working_inventory.pushItem(
+                                machine.input,
+                                name,
+                                input.count * curr_executions
+                            )
+                        end
+
+                        machine.layout = {}
+
+                        for slot, resource in pairs(entry.recipe.inputs.layout) do
+                            if resource then
+                                machine.layout[slot] = {
+                                    name = resource.name,
+                                    count = resource.count * curr_executions,
+                                }
+                            end
+                        end
+
+                        table.insert(round_machines, machine)
+
+                        round_entry_execs[entry] = (round_entry_execs[entry] or 0) + curr_executions
+                        remaining[entry] = remaining[entry] - curr_executions
+                    end
                 end
+            end
+
+            for _, entry in ipairs(entries) do
+                pending[entry] = remaining[entry]
             end
         end
 
