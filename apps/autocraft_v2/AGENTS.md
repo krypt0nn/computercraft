@@ -10,7 +10,7 @@ gvfs mount. No separate deploy step needed.
 Files to edit:
 - `craft_terminal.lua` — the terminal computer script (master controller)
 - `craft_turtle.lua` — the turtle worker script
-- `recipes/{disk}/*.lua` — recipe definitions
+- `recipes/{category}/*.lua` — recipe definitions (flat subdirs)
 - `AGENTS.md` — this file
 
 ## Overview
@@ -24,7 +24,7 @@ CC:Tweaked + Tom's Simple Storage auto-crafting system. User requests an item+qu
 
 ## Recipe format
 
-Each file under `recipes/{disk}/*.lua` returns:
+Each file under `recipes/{category}/*.lua` returns:
 
 ```lua
 return {
@@ -39,7 +39,9 @@ return {
 }
 ```
 
-Namespaced names (`mod:item`) are used throughout. Loaded from any `recipes/` directory on any connected disk drive. Recipes without a configured machine are skipped.
+Namespaced names (`mod:item`) are used throughout. Loaded from `recipes/`
+subdirectories. Recipes without a configured machine are skipped. To validate all recipe
+files on NixOS: `nix-shell -p lua --run 'for f in recipes/*/*.lua; do lua -e "assert(loadfile(\"$f\"))()"; done'`
 
 ## Architecture (5-step pipeline)
 
@@ -72,7 +74,12 @@ output. Within a batch, operations are parallelizable.
 
 ### Step 4: Stage materials
 
-Move `truncated_items` from master storage to working inventory (retry loop via `pullItem`). Then calculate net deficit across all batches: for every input item, `deficit = total_input - total_output - working_inventory_count`. Pull remaining deficit from master to working. Error if insufficient.
+Move `truncated_items` from master to working via buffer barrel (`move_items_from_master_to_working`). Then calculate net deficit across all batches: for every input item, `deficit = total_input - total_output - working_inventory_count`. Pull remaining deficit from master to working via buffer barrel. Error if insufficient.
+
+Connector↔connector transfers (`pushItem`/`pullItem` by item name) are broken
+on Tom's Simple Storage. All connector-to-connector transfers are routed
+through `BUFFER_INVENTORY` (an Iron Chests gold barrel): push from source
+connector to buffer barrel, then pull from buffer barrel to target connector.
 
 This isolates the process: if another user takes items from master during crafting, the pipeline isn't disrupted.
 
@@ -81,13 +88,13 @@ This isolates the process: if another user takes items from master during crafti
 For each batch (sequential), repeat rounds:
 
 1. **Clear machines**: empty every machine's input and output barrels into working inventory (retry loop per barrel).
-2. **Fill machines**: for each pending entry, claim an idle machine. Calculate how many executions fit (capped by `slot_usage / input.count` for EACH input AND `slot_usage / output.count` for EACH output — the effective cap is the minimum). Push items from working to machine input barrel. For crafter machines, build a `layout` table (grid slots with multiplied counts).
+2. **Fill machines**: group pending entries by machine type. If only one entry needs a machine type, parallelize it across ALL machines of that type (fair share: `ceil(remaining / machines_left)` per machine, capped by `slot_usage`). If multiple entries share a machine type, round-robin one machine per entry. Push items from working to machine input barrel. For crafter machines, build a `layout` table (grid slots with multiplied counts).
 3. **Auto phase** (non-crafter): wait for expected outputs to appear in machine output barrels. Poll every 1s, timeout after `MACHINES_TIMEOUT` seconds.
 4. **Crafter phase**: send layout to turtle via `rednet.send(machine.id, layout)`. Wait for reply per machine (`rednet.receive(MACHINES_TIMEOUT)`).
 
 Repeat until all entries in the batch have zero pending executions.
 
-After all batches, move everything back to master storage.
+After all batches, move everything back to master storage (including buffer).
 
 ## Machine types
 
@@ -121,3 +128,5 @@ All machines define `input`, `output` barrel names and `slot_usage` (max item co
 - `math.floor`/`math.ceil` applied consistently for fractional output handling.
 - Single `MACHINES_TIMEOUT = 600s` for both auto machine wait and rednet reply wait.
 - `slot_usage` caps BOTH input and output counts per fill. Failing to cap output can overflow turtle slot 4 into the crafting grid, forming unintended recipes (e.g. 64 logs → 256 planks → 192 overflow into grid slots 5-7 → slab/button recipes).
+- Connector↔connector `pushItem`/`pullItem` by item name is broken on Tom's Simple Storage. Use a buffer barrel as intermediary: push from source to buffer, pull from buffer to target.
+- Single-entry machine types in a batch are parallelized across all machines (fair split). Multi-entry types share machines round-robin.
