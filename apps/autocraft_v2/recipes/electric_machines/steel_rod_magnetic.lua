@@ -10,6 +10,6 @@ return {
         [8] = { name = "minecraft:redstone",                 count = 1 }
     },
     outputs = {
-        { name = "modern_industrialization:magnetic_steel_rod", count = 1 }
+        { name = "modern_industrialization:steel_rod_magnetic", count = 1 }
     }
 }

@@ -5,7 +5,7 @@ return {
         { name = "modern_industrialization:copper_wire",        count = 1 },
         { name = "modern_industrialization:steel_rod",          count = 1 },
         { name = "modern_industrialization:copper_wire",        count = 1 },
-        { name = "modern_industrialization:magnetic_steel_rod", count = 1 },
+        { name = "modern_industrialization:steel_rod_magnetic", count = 1 },
         { name = "modern_industrialization:copper_wire",        count = 1 },
         { name = "modern_industrialization:steel_rod",          count = 1 },
         { name = "modern_industrialization:copper_wire",        count = 1 },
