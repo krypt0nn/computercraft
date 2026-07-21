@@ -35,13 +35,22 @@ while true do
             end
         end
 
-        -- Clear turtle inventory
+        -- Clear turtle inventory (retry until empty)
         for slot = 1, 16 do
-            local item = turtle.getItemDetail(slot)
+            while true do
+                local item = turtle.getItemDetail(slot)
 
-            if item then
+                if not item then
+                    break
+                end
+
                 turtle.select(slot)
-                turtle.drop(item.count)
+
+                if turtle.drop(item.count) then
+                    break
+                end
+
+                os.sleep(0.5)
             end
         end
 
@@ -114,13 +123,22 @@ while true do
             turtle.select(4)
         end
 
-        -- Clear turtle slots
+        -- Clear turtle slots (retry until empty)
         for slot = 1, 16 do
-            local info = turtle.getItemDetail(slot)
+            while true do
+                local item = turtle.getItemDetail(slot)
 
-            if info then
+                if not item then
+                    break
+                end
+
                 turtle.select(slot)
-                turtle.drop(info.count)
+
+                if turtle.drop(item.count) then
+                    break
+                end
+
+                os.sleep(0.5)
             end
         end
 

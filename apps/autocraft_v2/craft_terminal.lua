@@ -237,24 +237,35 @@ local function convert_recipe_tree_into_batches(tree)
     while true do
         local batch = {}
         local recipe_map = {}
+        local pending = {}
 
         local function collect(node)
-            if not node or resolved[node] then
+            if not node or resolved[node] or pending[node] then
                 return
             end
 
             local ready = true
 
+            -- A node is ready only if ALL its leafs were resolved in PRIOR
+            -- batches, not in the current one. This prevents dependent recipes
+            -- from sharing a batch (e.g. plank -> slabs -> barrels in separate
+            -- batches).
             for _, child in pairs(node.leafs) do
-                if child and not resolved[child] then
-                    ready = false
+                if child then
+                    if not resolved[child] then
+                        if not pending[child] then
+                            collect(child)
+                        end
 
-                    break
+                        if not resolved[child] then
+                            ready = false
+                        end
+                    end
                 end
             end
 
             if ready then
-                resolved[node] = true
+                pending[node] = true
 
                 local entry = recipe_map[node.recipe]
 
@@ -283,6 +294,10 @@ local function convert_recipe_tree_into_batches(tree)
 
         if #batch == 0 then
             break
+        end
+
+        for node, _ in pairs(pending) do
+            resolved[node] = true
         end
 
         table.insert(batches, batch)
@@ -519,6 +534,13 @@ for i, batch in ipairs(craft_batches) do
                             curr_executions = math.min(
                                 curr_executions,
                                 math.floor(machine.slot_usage / input.count)
+                            )
+                        end
+
+                        for _, output in pairs(entry.recipe.outputs.flat) do
+                            curr_executions = math.min(
+                                curr_executions,
+                                math.floor(machine.slot_usage / output.count)
                             )
                         end
 
