@@ -1,5 +1,5 @@
 return {
-    machine = "furnace",
+    machine = "compressor",
     inputs = {
         { name = "techreborn:rubber", count = 1 }
     },
