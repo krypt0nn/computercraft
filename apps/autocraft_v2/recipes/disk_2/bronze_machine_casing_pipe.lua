@@ -12,6 +12,6 @@ return {
         { name = "modern_industrialization:bronze_curved_plate",   count = 1 }
     },
     outputs = {
-        { name  = "modern_industrialization:bronze_machine_casing_pipe", count = 2 }
+        { name = "modern_industrialization:bronze_machine_casing_pipe", count = 2 }
     }
 }

@@ -4,6 +4,6 @@ return {
         { name = "modern_industrialization:coke", count = 1 }
     },
     outputs = {
-        { name  = "modern_industrialization:coke_dust", count = 1 }
+        { name = "modern_industrialization:coke_dust", count = 1 }
     }
 }

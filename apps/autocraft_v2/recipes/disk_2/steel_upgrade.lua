@@ -12,6 +12,6 @@ return {
         { name = "modern_industrialization:fluid_pipe",           count = 1 }
     },
     outputs = {
-        { name  = "modern_industrialization:steel_upgrade", count = 2 }
+        { name = "modern_industrialization:steel_upgrade", count = 2 }
     }
 }

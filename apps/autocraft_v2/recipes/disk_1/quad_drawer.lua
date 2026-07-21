@@ -12,6 +12,6 @@ return {
         { name = "minecraft:spruce_log",    count = 1 }
     },
     outputs = {
-        { name  = "extended_drawers:quad_drawer", count = 1 }
+        { name = "extended_drawers:quad_drawer", count = 1 }
     }
 }

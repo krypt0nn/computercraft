@@ -11,6 +11,6 @@ return {
         nil
     },
     outputs = {
-        { name  = "modern_industrialization:bronze_drill", count = 4 }
+        { name = "modern_industrialization:bronze_drill", count = 4 }
     }
 }

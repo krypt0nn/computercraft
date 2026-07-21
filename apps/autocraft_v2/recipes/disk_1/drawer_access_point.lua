@@ -12,6 +12,6 @@ return {
         { name = "minecraft:cobblestone",          count = 1 }
     },
     outputs = {
-        { name  = "extended_drawers:access_point", count = 1 }
+        { name = "extended_drawers:access_point", count = 1 }
     }
 }

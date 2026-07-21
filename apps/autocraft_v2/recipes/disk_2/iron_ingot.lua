@@ -4,6 +4,6 @@ return {
         { name = "minecraft:iron_dust", count = 1 }
     },
     outputs = {
-        { name  = "minecraft:iron_ingot", count = 1 }
+        { name = "minecraft:iron_ingot", count = 1 }
     }
 }

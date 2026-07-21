@@ -4,6 +4,6 @@ return {
         { name = "modern_industrialization:iron_rod", count = 1 }
     },
     outputs = {
-        { name  = "modern_industrialization:iron_bolt", count = 2 }
+        { name = "modern_industrialization:iron_bolt", count = 2 }
     }
 }

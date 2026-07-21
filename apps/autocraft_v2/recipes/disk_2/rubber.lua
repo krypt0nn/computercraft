@@ -4,6 +4,6 @@ return {
         { name = "techreborn:sap", count = 1 }
     },
     outputs = {
-        { name  = "techreborn:rubber", count = 1 }
+        { name = "techreborn:rubber", count = 1 }
     }
 }

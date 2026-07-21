@@ -5,6 +5,6 @@ return {
     },
     outputs = {
         -- real chance is 1.5 but we use lower value for guaranteed result
-        { name  = "modern_industrialization:copper_dust", count = 1.2 }
+        { name = "modern_industrialization:copper_dust", count = 1.2 }
     }
 }

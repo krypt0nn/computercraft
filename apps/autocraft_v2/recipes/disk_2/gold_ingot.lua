@@ -4,6 +4,6 @@ return {
         { name = "minecraft:gold_dust", count = 1 }
     },
     outputs = {
-        { name  = "minecraft:gold_ingot", count = 1 }
+        { name = "minecraft:gold_ingot", count = 1 }
     }
 }

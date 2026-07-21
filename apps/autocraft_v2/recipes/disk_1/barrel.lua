@@ -12,6 +12,6 @@ return {
         { name = "minecraft:spruce_planks", count = 1 }
     },
     outputs = {
-        { name  = "minecraft:barrel", count = 1 }
+        { name = "minecraft:barrel", count = 1 }
     }
 }

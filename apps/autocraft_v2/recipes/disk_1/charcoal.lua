@@ -4,6 +4,6 @@ return {
         { name = "minecraft:spruce_log", count = 1 }
     },
     outputs = {
-        { name  = "minecraft:charcoal", count = 1 }
+        { name = "minecraft:charcoal", count = 1 }
     }
 }

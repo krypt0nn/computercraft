@@ -6,6 +6,6 @@ return {
         { name = "minecraft:spruce_log", count = 1 },
     },
     outputs = {
-        { name  = "minecraft:stick", count = 16 }
+        { name = "minecraft:stick", count = 16 }
     }
 }

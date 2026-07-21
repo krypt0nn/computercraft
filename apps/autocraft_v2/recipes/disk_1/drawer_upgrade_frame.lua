@@ -12,6 +12,6 @@ return {
         { name = "minecraft:stick",       count = 1 }
     },
     outputs = {
-        { name  = "extended_drawers:upgrade_frame", count = 1 }
+        { name = "extended_drawers:upgrade_frame", count = 1 }
     }
 }

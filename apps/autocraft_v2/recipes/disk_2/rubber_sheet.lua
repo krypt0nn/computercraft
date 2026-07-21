@@ -4,6 +4,6 @@ return {
         { name = "techreborn:rubber", count = 1 }
     },
     outputs = {
-        { name  = "modern_industrialization:rubber_sheet", count = 2 }
+        { name = "modern_industrialization:rubber_sheet", count = 2 }
     }
 }
