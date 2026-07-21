@@ -108,20 +108,38 @@ local function build_recipe(machine, inputs, outputs)
 end
 
 local function load_recipes()
-    local recipes = {}
+    local paths = {}
 
     for _, drive in ipairs(fs.find("*/recipes")) do
         for _, path in ipairs(fs.find(drive .. "/*.lua")) do
-            local recipe = loadfile(path)()
+            table.insert(paths, path)
+        end
 
-            -- Load only recipes for which we have machines
-            if recipe.machine and MACHINES[recipe.machine] then
-                table.insert(recipes, build_recipe(
-                    recipe.machine,
-                    recipe.inputs,
-                    recipe.outputs
-                ))
-            end
+        for _, path in ipairs(fs.find(drive .. "/*/*.lua")) do
+            table.insert(paths, path)
+        end
+    end
+
+    for _, path in ipairs(fs.find("recipes/*.lua")) do
+        table.insert(paths, path)
+    end
+
+    for _, path in ipairs(fs.find("recipes/*/*.lua")) do
+        table.insert(paths, path)
+    end
+
+    local recipes = {}
+
+    for _, path in ipairs(paths) do
+        local recipe = loadfile(path)()
+
+        -- Load only recipes for which we have machines
+        if recipe.machine and MACHINES[recipe.machine] then
+            table.insert(recipes, build_recipe(
+                recipe.machine,
+                recipe.inputs,
+                recipe.outputs
+            ))
         end
     end
 
