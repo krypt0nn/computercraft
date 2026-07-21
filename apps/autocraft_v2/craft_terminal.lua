@@ -8,25 +8,39 @@ local MACHINES_TIMEOUT = 600
 local MACHINES = {
     crafter = {
         { input = "minecraft:barrel_4",  output = "minecraft:barrel_3",  id = 1, slot_usage = 64 },
-        { input = "minecraft:barrel_17", output = "minecraft:barrel_18", id = 2, slot_usage = 64 }
+        { input = "minecraft:barrel_17", output = "minecraft:barrel_18", id = 2, slot_usage = 64 },
+        { input = "minecraft:barrel_53", output = "minecraft:barrel_52", id = 3, slot_usage = 64 },
+        { input = "minecraft:barrel_55", output = "minecraft:barrel_54", id = 4, slot_usage = 64 }
     },
     furnace = {
         { input = "minecraft:barrel_6",  output = "minecraft:barrel_5",  slot_usage = 64 },
-        { input = "minecraft:barrel_19", output = "minecraft:barrel_20", slot_usage = 64 }
+        { input = "minecraft:barrel_19", output = "minecraft:barrel_20", slot_usage = 64 },
+        { input = "minecraft:barrel_49", output = "minecraft:barrel_48", slot_usage = 64 },
+        { input = "minecraft:barrel_51", output = "minecraft:barrel_50", slot_usage = 64 }
     },
     macerator = {
         { input = "minecraft:barrel_8",  output = "minecraft:barrel_7",  slot_usage = 64 },
-        { input = "minecraft:barrel_21", output = "minecraft:barrel_22", slot_usage = 64 }
+        { input = "minecraft:barrel_21", output = "minecraft:barrel_22", slot_usage = 64 },
+        { input = "minecraft:barrel_45", output = "minecraft:barrel_44", slot_usage = 64 },
+        { input = "minecraft:barrel_47", output = "minecraft:barrel_46", slot_usage = 64 }
     },
     compressor = {
         { input = "minecraft:barrel_9",  output = "minecraft:barrel_10", slot_usage = 64 },
-        { input = "minecraft:barrel_15", output = "minecraft:barrel_16", slot_usage = 64 }
+        { input = "minecraft:barrel_15", output = "minecraft:barrel_16", slot_usage = 64 },
+        { input = "minecraft:barrel_41", output = "minecraft:barrel_40", slot_usage = 64 },
+        { input = "minecraft:barrel_43", output = "minecraft:barrel_42", slot_usage = 64 }
     },
     mixer = {
-        { input = "minecraft:barrel_11", output = "minecraft:barrel_12", slot_usage = 64 }
+        { input = "minecraft:barrel_11", output = "minecraft:barrel_12", slot_usage = 64 },
+        { input = "minecraft:barrel_33", output = "minecraft:barrel_34", slot_usage = 64 },
+        { input = "minecraft:barrel_37", output = "minecraft:barrel_36", slot_usage = 64 },
+        { input = "minecraft:barrel_39", output = "minecraft:barrel_38", slot_usage = 64 }
     },
     cutter = {
         { input = "minecraft:barrel_13", output = "minecraft:barrel_14", slot_usage = 64 }
+    },
+    wiremill = {
+        { input = "minecraft:barrel_56", output = "minecraft:barrel_57", slot_usage = 64 }
     }
 }
 
@@ -331,6 +345,18 @@ local master_inventory  = peripheral.wrap(MASTER_INVENTORY)
 local working_inventory = peripheral.wrap(WORKING_INVENTORY)
 local buffer_inventory  = peripheral.wrap(BUFFER_INVENTORY)
 
+if not master_inventory then
+    error("no master inventory " .. MASTER_INVENTORY)
+end
+
+if not working_inventory then
+    error("no working inventory " .. WORKING_INVENTORY)
+end
+
+if not buffer_inventory then
+    error("no buffer inventory " .. BUFFER_INVENTORY)
+end
+
 local function move_items_from_working_to_master(name, count)
     -- Push to buffer barrel
     local total = 0
@@ -428,6 +454,14 @@ local function move_machines_inventories_to_master()
         for _, machine in ipairs(machines) do
             local input_inventory = peripheral.wrap(machine.input)
             local output_inventory = peripheral.wrap(machine.output)
+
+            if not input_inventory then
+                error("no machine input inventory " .. machine.input)
+            end
+
+            if not output_inventory then
+                error("no machine output inventory " .. machine.output)
+            end
 
             for _, item in pairs(input_inventory.list()) do
                 master_inventory.pullItem(machine.input, item.name, item.count)
