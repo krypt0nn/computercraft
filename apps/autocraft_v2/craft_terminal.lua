@@ -1,6 +1,7 @@
 local REDNET_MODEM_SIDE = "top"
 local MASTER_INVENTORY  = "toms_storage:ts.inventory_connector_5"
 local WORKING_INVENTORY = "toms_storage:ts.inventory_connector_6"
+local BUFFER_INVENTORY  = "ironchests:gold_barrel_0"
 
 local MACHINES_TIMEOUT = 600
 
@@ -308,13 +309,98 @@ end
 
 ---------- inventories ----------
 
-local master_inventory = peripheral.wrap(MASTER_INVENTORY)
+local master_inventory  = peripheral.wrap(MASTER_INVENTORY)
 local working_inventory = peripheral.wrap(WORKING_INVENTORY)
+local buffer_inventory  = peripheral.wrap(BUFFER_INVENTORY)
+
+local function move_items_from_working_to_master(name, count)
+    -- Push to buffer barrel
+    local total = 0
+
+    while total < count do
+        local pushed = working_inventory.pushItem(
+            BUFFER_INVENTORY,
+            name,
+            count - total
+        )
+
+        if pushed == 0 then
+            break
+        end
+
+        total = total + pushed
+    end
+
+    -- Pull from buffer barrel
+    local total_pulled = 0
+
+    while total_pulled < total do
+        local pulled = master_inventory.pullItem(
+            BUFFER_INVENTORY,
+            name,
+            total - total_pulled
+        )
+
+        if pulled == 0 then
+            break
+        end
+
+        total_pulled = total_pulled + pulled
+    end
+
+    return total_pulled
+end
+
+local function move_items_from_master_to_working(name, count)
+    -- Push to buffer barrel
+    local total = 0
+
+    while total < count do
+        local pushed = master_inventory.pushItem(
+            BUFFER_INVENTORY,
+            name,
+            count - total
+        )
+
+        if pushed == 0 then
+            break
+        end
+
+        total = total + pushed
+    end
+
+    -- Pull from buffer barrel
+    local total_pulled = 0
+
+    while total_pulled < total do
+        local pulled = working_inventory.pullItem(
+            BUFFER_INVENTORY,
+            name,
+            total - total_pulled
+        )
+
+        if pulled == 0 then
+            break
+        end
+
+        total_pulled = total_pulled + pulled
+    end
+
+    return total_pulled
+end
 
 local function move_working_inventory_to_master()
     for _, item in pairs(working_inventory.items()) do
         if item.name and item.count then
-            master_inventory.pullItem(WORKING_INVENTORY, item.name, item.count)
+            move_items_from_working_to_master(item.name, item.count)
+        end
+    end
+end
+
+local function move_buffer_inventory_to_master()
+    for _, item in pairs(buffer_inventory.list()) do
+        if item.name and item.count then
+            master_inventory.pullItem(BUFFER_INVENTORY, item.name, item.count)
         end
     end
 end
@@ -339,6 +425,7 @@ end
 ---------- user interface ----------
 
 move_working_inventory_to_master()
+move_buffer_inventory_to_master()
 move_machines_inventories_to_master()
 
 -- User input
@@ -397,24 +484,11 @@ end
 
 -- Move crafting ingredients to working inventory
 for name, count in pairs(truncated_items) do
-    local total_moved = 0
-
-    while total_moved < count do
-        local curr_moved = working_inventory.pullItem(
-            MASTER_INVENTORY,
-            name,
-            count - total_moved
-        )
-
-        if curr_moved == 0 then
-            break
-        end
-
-        total_moved = total_moved + curr_moved
-    end
+    local total_moved = move_items_from_master_to_working(name, count)
 
     if total_moved < count then
         move_working_inventory_to_master()
+        move_buffer_inventory_to_master()
 
         error("missing resource " .. name .. " x" .. count - total_moved)
     end
@@ -450,10 +524,11 @@ for name, count in pairs(total_inputs) do
         if deficit > 0 then
             deficit = math.ceil(deficit)
 
-            local moved = working_inventory.pullItem(MASTER_INVENTORY, name, deficit)
+            local moved = move_items_from_master_to_working(name, deficit)
 
             if moved < deficit then
                 move_working_inventory_to_master()
+                move_buffer_inventory_to_master()
 
                 error("missing resource " .. name .. " x" .. deficit - moved)
             end
@@ -673,6 +748,7 @@ for i, batch in ipairs(craft_batches) do
 
         if #round_machines == 0 then
             move_working_inventory_to_master()
+            move_buffer_inventory_to_master()
             move_machines_inventories_to_master()
 
             error("cannot fit any executions in machines")
@@ -732,6 +808,7 @@ for i, batch in ipairs(craft_batches) do
 
             if not outputs_ready then
                 move_working_inventory_to_master()
+                move_buffer_inventory_to_master()
                 move_machines_inventories_to_master()
 
                 error("processing timeout")
@@ -761,4 +838,5 @@ end
 
 -- Move crafting results to master inventory
 move_working_inventory_to_master()
+move_buffer_inventory_to_master()
 move_machines_inventories_to_master()
