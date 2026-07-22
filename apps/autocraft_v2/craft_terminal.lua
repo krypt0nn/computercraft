@@ -51,6 +51,9 @@ local MACHINES = {
     assembler = {
         { input = "minecraft:barrel_62", output = "minecraft:barrel_63", slot_usage = 64 },
         { input = "minecraft:barrel_66", output = "minecraft:barrel_67", slot_usage = 64 }
+    },
+    electric_blast_furnace = {
+        { input = "minecraft:barrel_70", output = "minecraft:barrel_71", slot_usage = 64 }
     }
 }
 
