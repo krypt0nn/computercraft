@@ -37,17 +37,20 @@ local MACHINES = {
         { input = "minecraft:barrel_39", output = "minecraft:barrel_38", slot_usage = 64 }
     },
     cutter = {
-        { input = "minecraft:barrel_13", output = "minecraft:barrel_14", slot_usage = 64 }
+        { input = "minecraft:barrel_13", output = "minecraft:barrel_14", slot_usage = 64 },
+        { input = "minecraft:barrel_64", output = "minecraft:barrel_65", slot_usage = 64 }
     },
     wiremill = {
         { input = "minecraft:barrel_56", output = "minecraft:barrel_57", slot_usage = 64 },
         { input = "minecraft:barrel_58", output = "minecraft:barrel_59", slot_usage = 64 }
     },
     polarizer = {
-        { input = "minecraft:barrel_60", output = "minecraft:barrel_61", slot_usage = 64 }
+        { input = "minecraft:barrel_60", output = "minecraft:barrel_61", slot_usage = 64 },
+        { input = "minecraft:barrel_68", output = "minecraft:barrel_69", slot_usage = 64 }
     },
     assembler = {
-        { input = "minecraft:barrel_62", output = "minecraft:barrel_63", slot_usage = 64 }
+        { input = "minecraft:barrel_62", output = "minecraft:barrel_63", slot_usage = 64 },
+        { input = "minecraft:barrel_66", output = "minecraft:barrel_67", slot_usage = 64 }
     }
 }
 
