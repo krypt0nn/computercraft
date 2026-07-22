@@ -1,0 +1,9 @@
+return {
+    machine = "polarizer",
+    inputs = {
+        { name = "modern_industrialization:cupronickel_wire", count = 1 }
+    },
+    outputs = {
+        { name = "modern_industrialization:cupronickel_wire_magnetic", count = 1 }
+    }
+}
