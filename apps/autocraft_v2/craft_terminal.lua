@@ -45,6 +45,9 @@ local MACHINES = {
     },
     polarizer = {
         { input = "minecraft:barrel_60", output = "minecraft:barrel_61", slot_usage = 64 }
+    },
+    assembler = {
+        { input = "minecraft:barrel_62", output = "minecraft:barrel_63", slot_usage = 64 }
     }
 }
 
