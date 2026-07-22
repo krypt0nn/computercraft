@@ -1,9 +1,21 @@
+-- furnace craft
+-- return {
+--     machine = "furnace",
+--     inputs = {
+--         { name = "techreborn:sap", count = 1 }
+--     },
+--     outputs = {
+--         { name = "techreborn:rubber", count = 1 }
+--     }
+-- }
+
+-- extractor craft
 return {
-    machine = "furnace",
+    machine = "extractor",
     inputs = {
         { name = "techreborn:sap", count = 1 }
     },
     outputs = {
-        { name = "techreborn:rubber", count = 1 }
+        { name = "techreborn:rubber", count = 3 }
     }
 }
