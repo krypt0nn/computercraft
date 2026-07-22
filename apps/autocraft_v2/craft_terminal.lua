@@ -59,10 +59,12 @@ local MACHINES = {
         { input = "minecraft:barrel_78", output = "minecraft:barrel_79", slot_usage = 64 }
     },
     centrifuge = {
-        { input = "minecraft:barrel_80", output = "minecraft:barrel_81", slot_usage = 64 }
+        { input = "minecraft:barrel_80", output = "minecraft:barrel_81", slot_usage = 64 },
+        { input = "minecraft:barrel_82", output = "minecraft:barrel_83", slot_usage = 64 }
     },
     electric_blast_furnace = {
-        { input = "minecraft:barrel_70", output = "minecraft:barrel_71", slot_usage = 64 }
+        { input = "minecraft:barrel_70", output = "minecraft:barrel_71", slot_usage = 64 },
+        { input = "minecraft:barrel_84", output = "minecraft:barrel_85", slot_usage = 64 }
     }
 }
 
