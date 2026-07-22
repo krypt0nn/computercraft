@@ -25,6 +25,6 @@ return {
         { name = "modern_industrialization:steel_rod",   count = 1 }
     },
     outputs = {
-        { name = "modern_industrialization:resistor", count = 4 }
+        { name = "modern_industrialization:inductor", count = 4 }
     }
 }
