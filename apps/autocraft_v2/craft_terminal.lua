@@ -1,7 +1,7 @@
 local REDNET_MODEM_SIDE = "top"
 local MASTER_INVENTORY  = "toms_storage:ts.inventory_connector_5"
 local WORKING_INVENTORY = "toms_storage:ts.inventory_connector_6"
-local BUFFER_INVENTORY  = "ironchests:gold_barrel_0"
+local BUFFER_INVENTORY  = "ironchests:gold_barrel_2"
 
 local MACHINES_TIMEOUT = 600
 
@@ -390,7 +390,7 @@ if not buffer_inventory then
 end
 
 local function move_items_from_working_to_master(name, count)
-    -- Push to buffer barrel
+    -- Push to buffer barrel, drain to target if buffer fills
     local total = 0
 
     while total < count do
@@ -400,35 +400,38 @@ local function move_items_from_working_to_master(name, count)
             count - total
         )
 
-        if pushed == 0 then
+        total = total + pushed
+
+        if total >= count then
             break
         end
 
-        total = total + pushed
-    end
-
-    -- Pull from buffer barrel
-    local total_pulled = 0
-
-    while total_pulled < total do
+        -- Buffer likely full, drain to target
         local pulled = master_inventory.pullItem(
             BUFFER_INVENTORY,
             name,
-            total - total_pulled
+            count - total
         )
 
         if pulled == 0 then
             break
         end
-
-        total_pulled = total_pulled + pulled
     end
 
-    return total_pulled
+    -- Drain remaining items from buffer to target
+    while true do
+        local pulled = master_inventory.pullItem(BUFFER_INVENTORY, name, 64)
+
+        if pulled == 0 then
+            break
+        end
+    end
+
+    return total
 end
 
 local function move_items_from_master_to_working(name, count)
-    -- Push to buffer barrel
+    -- Push to buffer barrel, drain to target if buffer fills
     local total = 0
 
     while total < count do
@@ -438,31 +441,34 @@ local function move_items_from_master_to_working(name, count)
             count - total
         )
 
-        if pushed == 0 then
+        total = total + pushed
+
+        if total >= count then
             break
         end
 
-        total = total + pushed
-    end
-
-    -- Pull from buffer barrel
-    local total_pulled = 0
-
-    while total_pulled < total do
+        -- Buffer likely full, drain to target
         local pulled = working_inventory.pullItem(
             BUFFER_INVENTORY,
             name,
-            total - total_pulled
+            count - total
         )
 
         if pulled == 0 then
             break
         end
-
-        total_pulled = total_pulled + pulled
     end
 
-    return total_pulled
+    -- Drain remaining items from buffer to target
+    while true do
+        local pulled = working_inventory.pullItem(BUFFER_INVENTORY, name, 64)
+
+        if pulled == 0 then
+            break
+        end
+    end
+
+    return total
 end
 
 local function move_working_inventory_to_master()
