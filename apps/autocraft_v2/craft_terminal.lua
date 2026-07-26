@@ -73,6 +73,9 @@ local MACHINES = {
     electric_blast_furnace = {
         { input = "minecraft:barrel_70", output = "minecraft:barrel_71", slot_usage = 64 },
         { input = "minecraft:barrel_84", output = "minecraft:barrel_85", slot_usage = 64 }
+    },
+    vacuum_freezer = {
+        { input = "minecraft:barrel_102", output = "minecraft:barrel_103", slot_usage = 64 }
     }
 }
 
