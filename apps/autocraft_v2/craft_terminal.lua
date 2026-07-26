@@ -72,6 +72,12 @@ local MACHINES = {
         { input = "minecraft:barrel_104", output = "minecraft:barrel_105", slot_usage = 64 },
         { input = "minecraft:barrel_106", output = "minecraft:barrel_107", slot_usage = 64 }
     },
+    electrolyzer = {
+        { input = "minecraft:barrel_108", output = "minecraft:barrel_109", slot_usage = 64 },
+        { input = "minecraft:barrel_110", output = "minecraft:barrel_111", slot_usage = 64 },
+        { input = "minecraft:barrel_112", output = "minecraft:barrel_113", slot_usage = 64 },
+        { input = "minecraft:barrel_114", output = "minecraft:barrel_115", slot_usage = 64 }
+    },
     electric_blast_furnace = {
         { input = "minecraft:barrel_70", output = "minecraft:barrel_71", slot_usage = 64 },
         { input = "minecraft:barrel_84", output = "minecraft:barrel_85", slot_usage = 64 }
