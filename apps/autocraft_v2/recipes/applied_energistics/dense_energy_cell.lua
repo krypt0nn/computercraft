@@ -9,7 +9,6 @@ return {
         { name = "ae2:energy_cell",                                count = 1 },
         { name = "ae2:energy_cell",                                count = 1 },
         { name = "ae2:energy_cell",                                count = 1 },
-        { name = "ae2:energy_cell",                                count = 1 },
         { name = "ae2:energy_cell",                                count = 1 }
     },
     outputs = {
