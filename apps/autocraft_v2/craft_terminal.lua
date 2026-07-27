@@ -79,16 +79,16 @@ local MACHINES = {
         { input = "minecraft:barrel_114", output = "minecraft:barrel_115", slot_usage = 64 }
     },
     silicon_press_laser_engraver = {
-        { input = "minecraft:barrel_116", output = "minecraft:barrel_117", slot_usage = 64 }
+        { input = "minecraft:barrel_117", output = "minecraft:barrel_116", slot_usage = 64 }
     },
     calculation_processor_press_laser_engraver = {
-        { input = "minecraft:barrel_118", output = "minecraft:barrel_119", slot_usage = 64 }
+        { input = "minecraft:barrel_119", output = "minecraft:barrel_118", slot_usage = 64 }
     },
     logic_processor_press_laser_engraver = {
-        { input = "minecraft:barrel_120", output = "minecraft:barrel_121", slot_usage = 64 }
+        { input = "minecraft:barrel_121", output = "minecraft:barrel_120", slot_usage = 64 }
     },
     engineering_processor_press_laser_engraver = {
-        { input = "minecraft:barrel_122", output = "minecraft:barrel_123", slot_usage = 64 }
+        { input = "minecraft:barrel_123", output = "minecraft:barrel_122", slot_usage = 64 }
     },
     electric_blast_furnace = {
         { input = "minecraft:barrel_70", output = "minecraft:barrel_71", slot_usage = 64 },
