@@ -12,6 +12,6 @@ return {
         { name = "modern_industrialization:aluminum_plate", count = 1 }
     },
     outputs = {
-        { name = "ae2:interface", count = 1 }
+        { name = "ae2:pattern_provider", count = 1 }
     }
 }
